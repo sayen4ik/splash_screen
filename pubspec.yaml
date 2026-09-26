@@ -62,6 +62,7 @@ flutter:
     - assets/vortex_spiral.png
     - assets/cloud_segment.png
     - assets/logo.png
+    - assets/stars_bg.png
     - assets/cloud_blob_1.webp
     - assets/cloud_blob_2.webp
     - assets/cloud_blob_3.webp
@@ -74,6 +75,9 @@ flutter:
     - assets/cloud_blob_10.webp
     - assets/cloud_blob_11.webp
     - assets/cloud_blob_12.webp
+    - assets/cloud_blob_13.webp
+    - assets/cloud_blob_14.webp
+    - assets/cloud_blob_15.webp
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

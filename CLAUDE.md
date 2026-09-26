@@ -37,6 +37,10 @@ tuned live with sliders before porting it.
   once (see `_cloudAssetPaths` in `splash_screen.dart`); the rest are past
   sets kept in case of reverting. Multiple images in `_cloudAssetPaths` get
   randomly (but stably per-particle) mixed along the spiral.
+- `assets/stars_bg.png` — static starfield background. Drawn once, full
+  screen (`BoxFit.cover`, centered), above the base gradient but below the
+  spiral/logo — it never animates and is unaffected by the zoom/rotation
+  transforms applied to the spiral+logo group.
 - `assets/vortex_spiral.png`, `cloud_segment.png` — assets for the unused
   Droste-effect playground, not the splash screen.
 
@@ -65,20 +69,26 @@ landed on after a long live-tuning session. Change them by editing the
 `double _xxx = ...` field, not by dragging the slider and forgetting to
 save it back (the slider only changes runtime state, not the source).
 
-| Field | Value | What it does |
-|---|---|---|
-| `_speedMultiplier` | 0.05 | Loop flow speed |
-| `_sizeMultiplier` | 1.82 | Cloud size at the outer edge |
-| `_startSizeMultiplier` | 1.0 | Cloud size at the logo tip (spawn) |
-| `_particleCount` | 60 | Base puff count |
-| `_particleSpacing` | 1.41 | Density (higher = sparser) |
-| `_squashFactor` | 0.70 | Ellipse squash of the spiral |
-| `_tiltAngleDeg` | -40.0 | Tilt axis of the squash |
-| `_turnsMultiplier` | 1.76 | How many turns the spiral winds |
-| `_reachMultiplier` | 2.55 | How far out the spiral reaches |
-| `_globalZoom` | 1.91 | Overall zoom of spiral+logo together |
-| `_fillAmount` | 100.0 | % of the spiral populated with clouds (intro wipes 0→100) |
-| `_rotationDeg` | 0.0 | Overall rotation of spiral+logo together |
+| Field | Value | UI label | What it does |
+|---|---|---|---|
+| `_speedMultiplier` | 0.04 | Speed | Loop flow speed |
+| `_sizeMultiplier` | 1.82 | Scale Out | Cloud size at the outer edge |
+| `_startSizeMultiplier` | 0.10 | Scale In | Cloud size at the logo tip (spawn) |
+| `_particleCount` | 60 | Count | Base puff count |
+| `_particleSpacing` | 1.11 | Spacing | Density (higher = sparser) |
+| `_squashFactor` | 0.70 | Squash | Ellipse squash of the spiral |
+| `_tiltAngleDeg` | -40.0 | Tilt | Tilt axis of the squash |
+| `_turnsMultiplier` | 2.03 | Turns | How many turns the spiral winds |
+| `_reachMultiplier` | 2.55 | Reach | How far out the spiral reaches |
+| `_globalZoom` | 1.91 | Zoom | Overall zoom of spiral+logo together |
+| `_fillAmount` | 100.0 | Fill | % of the spiral populated with clouds (intro wipes 0→100) |
+| `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |
+
+There's also a fixed (non-live) cosmetic tint drawn over the whole splash,
+bottom to top: `#E6BAFF` at 40% opacity at the bottom fading to `#E6BAFF`
+at 0% (fully transparent) at the top. It sits above the clouds/logo scene
+but below the debug slider UI, and isn't affected by any of the sliders
+above.
 
 Intro (~1.5s): Fill 0→100%, Rotate 70°→0°, Zoom 1.0→baseline, speed decays
 from 7x, logo scales in with a slight tilt (35°→0°) — all eased with

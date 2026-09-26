@@ -70,17 +70,19 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// Scales how fast `_spiralTimeSec` advances, so dragging it changes how
   /// quickly clouds travel from the logo tip to the edge without touching
   /// [CloudSpiralConfig.loopSeconds] itself.
-  double _speedMultiplier = 0.05;
+  double _speedMultiplier = 0.04;
 
   /// Live size knob for the *outer* (far/near-camera) clouds — the ones
-  /// that have traveled furthest from the logo tip.
+  /// that have traveled furthest from the logo tip, i.e. how big puffs get
+  /// once they've scaled all the way out. Shown in the UI as "Scale Out".
   double _sizeMultiplier = 1.82;
 
-  /// Live size knob for the clouds right at the logo tip (spawn size).
-  /// Together with `_sizeMultiplier` this sets how much clouds grow over
-  /// their trip out — a bigger gap between the two reads as puffs visibly
-  /// ballooning outward as they travel.
-  double _startSizeMultiplier = 1.0;
+  /// Live size knob for the clouds right at the logo tip (spawn size), i.e.
+  /// how big puffs are the moment they scale in from the logo. Shown in the
+  /// UI as "Scale In". Together with `_sizeMultiplier` ("Scale Out") this
+  /// sets how much clouds grow over their trip out — a bigger gap between
+  /// the two reads as puffs visibly ballooning outward as they travel.
+  double _startSizeMultiplier = 0.10;
 
   /// Base number of puffs `_particleSpacing` scales the density from
   /// (overrides [CloudSpiralConfig.particleCount] live).
@@ -88,7 +90,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
   /// Live knob for how far apart consecutive puffs sit along the spiral
   /// (1.0 = evenly fills the whole loop, as before).
-  double _particleSpacing = 1.41;
+  double _particleSpacing = 1.11;
 
   /// Live ellipse-squash knob (1.0 = perfect circle, less = flatter oval),
   /// for the tilted-tunnel "distort" look.
@@ -98,7 +100,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   double _tiltAngleDeg = -40.0;
 
   /// Live multiplier on the spiral's turn count.
-  double _turnsMultiplier = 1.76;
+  double _turnsMultiplier = 2.03;
 
   /// Live multiplier on how far out the spiral reaches (1.0 = the canvas'
   /// own corner distance, so it fills a tall portrait screen edge to edge).
@@ -128,9 +130,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// see [CloudSpiralPainter]) mix between several cloud shapes instead of
   /// stamping the same one everywhere.
   static const _cloudAssetPaths = [
-    'assets/cloud_blob_10.webp',
-    'assets/cloud_blob_11.webp',
-    'assets/cloud_blob_12.webp',
+    'assets/cloud_blob_13.webp',
+    'assets/cloud_blob_14.webp',
+    'assets/cloud_blob_15.webp',
   ];
 
   @override
@@ -291,6 +293,17 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                     ),
                   ),
                 ),
+                // Static starfield: fixed in place, centered, never moves
+                // or animates — sits above the background gradient but
+                // below the spiral/logo, and is unaffected by the zoom and
+                // rotation transforms applied to those below.
+                const Positioned.fill(
+                  child: Image(
+                    image: AssetImage('assets/stars_bg.png'),
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                  ),
+                ),
                 // Overall zoom + rotation knobs: scale/spin the spiral +
                 // logo together as one rigid piece (not the full-bleed
                 // background gradient, so shrinking/rotating this never
@@ -351,6 +364,23 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
               ],
             ),
           ),
+          // Cosmetic tint over the whole splash: solid-ish at the bottom,
+          // fading to fully transparent at the top. Sits above the scene
+          // (clouds/logo) but below the debug UI.
+          const IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Color(0x66E6BAFF), // #E6BAFF @ 40% opacity
+                    Color(0x00E6BAFF), // #E6BAFF @ 0% opacity
+                  ],
+                ),
+              ),
+            ),
+          ),
           Positioned(top: 48, left: 16, child: _StateBadge(state: _state)),
           Positioned(
             left: 16,
@@ -374,7 +404,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                     ),
                     const SizedBox(height: 8),
                     _LabeledSlider(
-                      label: 'Scale',
+                      label: 'Scale Out',
                       value: _sizeMultiplier,
                       min: 0.3,
                       max: 6.0,
@@ -550,7 +580,7 @@ class _LabeledSlider extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 48,
+            width: 64,
             child: Text(
               label,
               style: const TextStyle(color: Colors.white70, fontSize: 12),
