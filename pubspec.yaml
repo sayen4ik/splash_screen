@@ -78,6 +78,9 @@ flutter:
     - assets/cloud_blob_13.webp
     - assets/cloud_blob_14.webp
     - assets/cloud_blob_15.webp
+    - assets/cloud_blob_16.webp
+    - assets/cloud_blob_17.webp
+    - assets/cloud_blob_18.webp
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

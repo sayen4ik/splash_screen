@@ -31,6 +31,13 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   static const _outroDuration = Duration(milliseconds: 500);
   static const _config = CloudSpiralConfig.initial;
 
+  // The phone-frame preview size: iPhone 13/14/15 logical points (390x844),
+  // one of the most common phone viewport sizes — chosen so this demo shows
+  // a developer an accurate, device-shaped preview rather than whatever
+  // random size the browser window happens to be.
+  static const _phoneWidth = 390.0;
+  static const _phoneHeight = 844.0;
+
   // Outro choreography: diving INTO the vortex — the whole composition
   // (spiral + logo together, as one piece) zooms in dramatically while the
   // scene fades, over `_outroDuration`. The cloud stream's own flow-speed is
@@ -82,11 +89,11 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// UI as "Scale In". Together with `_sizeMultiplier` ("Scale Out") this
   /// sets how much clouds grow over their trip out — a bigger gap between
   /// the two reads as puffs visibly ballooning outward as they travel.
-  double _startSizeMultiplier = 0.10;
+  double _startSizeMultiplier = 1.02;
 
   /// Base number of puffs `_particleSpacing` scales the density from
   /// (overrides [CloudSpiralConfig.particleCount] live).
-  double _particleCount = 60;
+  double _particleCount = 86;
 
   /// Live knob for how far apart consecutive puffs sit along the spiral
   /// (1.0 = evenly fills the whole loop, as before).
@@ -100,7 +107,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   double _tiltAngleDeg = -40.0;
 
   /// Live multiplier on the spiral's turn count.
-  double _turnsMultiplier = 2.03;
+  double _turnsMultiplier = 1.81;
 
   /// Live multiplier on how far out the spiral reaches (1.0 = the canvas'
   /// own corner distance, so it fills a tall portrait screen edge to edge).
@@ -130,9 +137,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// see [CloudSpiralPainter]) mix between several cloud shapes instead of
   /// stamping the same one everywhere.
   static const _cloudAssetPaths = [
-    'assets/cloud_blob_13.webp',
-    'assets/cloud_blob_14.webp',
-    'assets/cloud_blob_15.webp',
+    'assets/cloud_blob_16.webp',
+    'assets/cloud_blob_17.webp',
+    'assets/cloud_blob_18.webp',
   ];
 
   @override
@@ -268,26 +275,30 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
       return _MainAppMock(onReplay: _playIntro);
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B0314),
-      body: Stack(
+    // The splash itself is rendered at a fixed phone-sized canvas (not the
+    // browser window) so what's shown on the left is an accurate preview of
+    // how it'll actually look on a phone screen — this is a dev-facing demo
+    // meant to be shown to the person implementing it, not just a live-tune
+    // canvas. Everything below (gradient, starfield, spiral, logo, tint) is
+    // unchanged from before; only the outer wrapping changed.
+    final splashContent = Opacity(
+      opacity: sceneOpacity,
+      child: Stack(
         fit: StackFit.expand,
         children: [
-          Opacity(
-            opacity: sceneOpacity,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                const DecoratedBox(
+          Stack(
+            fit: StackFit.expand,
+            children: [
+              const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Color(0xFF0B0314),
-                        Color(0xFF2E2054),
-                        Color(0xFF8C6FD9),
-                        Color(0xFFEDE6FF),
+                        Color(0xFF07020D),
+                        Color(0xFF251A43),
+                        Color(0xFF7059AE),
+                        Color(0xFFC9C3D9),
                       ],
                       stops: [0.0, 0.45, 0.78, 1.0],
                     ),
@@ -363,10 +374,10 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                 ),
               ],
             ),
-          ),
           // Cosmetic tint over the whole splash: solid-ish at the bottom,
           // fading to fully transparent at the top. Sits above the scene
-          // (clouds/logo) but below the debug UI.
+          // (clouds/logo), as part of the phone-frame content itself — not
+          // debug UI, so it stays inside `splashContent`.
           const IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -381,139 +392,215 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
               ),
             ),
           ),
-          Positioned(top: 48, left: 16, child: _StateBadge(state: _state)),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 16,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.62,
-              ),
-              child: SingleChildScrollView(
-                reverse: true,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _LabeledSlider(
-                      label: 'Speed',
-                      value: _speedMultiplier,
-                      min: 0.01,
-                      max: 0.1,
-                      onChanged: (v) => setState(() => _speedMultiplier = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Scale Out',
-                      value: _sizeMultiplier,
-                      min: 0.3,
-                      max: 6.0,
-                      onChanged: (v) => setState(() => _sizeMultiplier = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Scale In',
-                      value: _startSizeMultiplier,
-                      min: 0.1,
-                      max: 4.0,
-                      onChanged: (v) =>
-                          setState(() => _startSizeMultiplier = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Count',
-                      value: _particleCount,
-                      min: 10,
-                      max: 200,
-                      unit: '',
-                      onChanged: (v) => setState(() => _particleCount = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Spacing',
-                      value: _particleSpacing,
-                      min: 0.3,
-                      max: 3.0,
-                      onChanged: (v) => setState(() => _particleSpacing = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Squash',
-                      value: _squashFactor,
-                      min: 0.3,
-                      max: 1.0,
-                      onChanged: (v) => setState(() => _squashFactor = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Tilt',
-                      value: _tiltAngleDeg,
-                      min: -60,
-                      max: 60,
-                      unit: '°',
-                      onChanged: (v) => setState(() => _tiltAngleDeg = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Turns',
-                      value: _turnsMultiplier,
-                      min: 0.5,
-                      max: 6.0,
-                      onChanged: (v) => setState(() => _turnsMultiplier = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Reach',
-                      value: _reachMultiplier,
-                      min: 0.5,
-                      max: 6.0,
-                      onChanged: (v) => setState(() => _reachMultiplier = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Zoom',
-                      value: _globalZoom,
-                      min: 0.3,
-                      max: 5.0,
-                      onChanged: (v) => setState(() => _globalZoom = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Fill',
-                      value: _fillAmount,
-                      min: 0,
-                      max: 100,
-                      unit: '%',
-                      onChanged: (v) => setState(() => _fillAmount = v),
-                    ),
-                    const SizedBox(height: 8),
-                    _LabeledSlider(
-                      label: 'Rotate',
-                      value: _rotationDeg,
-                      min: -180,
-                      max: 180,
-                      unit: '°',
-                      onChanged: (v) => setState(() => _rotationDeg = v),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        OutlinedButton(
-                          onPressed: _playIntro,
-                          child: const Text('Play Intro'),
+        ],
+      ),
+    );
+
+    // Dev-facing layout: the splash renders inside a fixed phone-sized,
+    // rounded frame on the left — exactly `_phoneWidth`x`_phoneHeight`,
+    // scaled to fit via FittedBox but never stretched off its 9:19.5
+    // aspect ratio — so what's shown is a faithful preview of the phone
+    // screen to hand to a developer, not the debug canvas. All live-tuning
+    // controls (sliders, state, triggers) live in the panel on the right,
+    // entirely outside the phone frame, so they never show up "in" the
+    // splash itself.
+    return Scaffold(
+      backgroundColor: const Color(0xFF16161C),
+      body: Row(
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SizedBox(
+                        width: _phoneWidth,
+                        height: _phoneHeight,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(48),
+                            border: Border.all(
+                              color: Colors.white24,
+                              width: 8,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(40),
+                            child: splashContent,
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: _state == SplashState.looping
-                              ? _triggerExit
-                              : null,
-                          child: const Text('Trigger App Loaded (Exit)'),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    '${_phoneWidth.toStringAsFixed(0)} × '
+                    '${_phoneHeight.toStringAsFixed(0)} — iPhone 13/14/15 '
+                    'logical size (most common phone viewport)',
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 360,
+            color: const Color(0xFF14101C),
+            padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Live tuning controls',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _StateBadge(state: _state),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _LabeledSlider(
+                          label: 'Speed',
+                          value: _speedMultiplier,
+                          min: 0.01,
+                          max: 0.1,
+                          onChanged: (v) =>
+                              setState(() => _speedMultiplier = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Scale Out',
+                          value: _sizeMultiplier,
+                          min: 0.3,
+                          max: 6.0,
+                          onChanged: (v) =>
+                              setState(() => _sizeMultiplier = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Scale In',
+                          value: _startSizeMultiplier,
+                          min: 0.1,
+                          max: 4.0,
+                          onChanged: (v) =>
+                              setState(() => _startSizeMultiplier = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Count',
+                          value: _particleCount,
+                          min: 10,
+                          max: 200,
+                          unit: '',
+                          onChanged: (v) =>
+                              setState(() => _particleCount = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Spacing',
+                          value: _particleSpacing,
+                          min: 0.3,
+                          max: 3.0,
+                          onChanged: (v) =>
+                              setState(() => _particleSpacing = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Squash',
+                          value: _squashFactor,
+                          min: 0.3,
+                          max: 1.0,
+                          onChanged: (v) =>
+                              setState(() => _squashFactor = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Tilt',
+                          value: _tiltAngleDeg,
+                          min: -60,
+                          max: 60,
+                          unit: '°',
+                          onChanged: (v) =>
+                              setState(() => _tiltAngleDeg = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Turns',
+                          value: _turnsMultiplier,
+                          min: 0.5,
+                          max: 6.0,
+                          onChanged: (v) =>
+                              setState(() => _turnsMultiplier = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Reach',
+                          value: _reachMultiplier,
+                          min: 0.5,
+                          max: 6.0,
+                          onChanged: (v) =>
+                              setState(() => _reachMultiplier = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Zoom',
+                          value: _globalZoom,
+                          min: 0.3,
+                          max: 5.0,
+                          onChanged: (v) => setState(() => _globalZoom = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Fill',
+                          value: _fillAmount,
+                          min: 0,
+                          max: 100,
+                          unit: '%',
+                          onChanged: (v) => setState(() => _fillAmount = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Rotate',
+                          value: _rotationDeg,
+                          min: -180,
+                          max: 180,
+                          unit: '°',
+                          onChanged: (v) => setState(() => _rotationDeg = v),
                         ),
                       ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    OutlinedButton(
+                      onPressed: _playIntro,
+                      child: const Text('Play Intro'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _state == SplashState.looping
+                          ? _triggerExit
+                          : null,
+                      child: const Text('Trigger App Loaded (Exit)'),
+                    ),
                   ],
                 ),
-              ),
+              ],
             ),
           ),
         ],

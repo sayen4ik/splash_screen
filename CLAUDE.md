@@ -11,7 +11,14 @@ tuned live with sliders before porting it.
 - `lib/splash_screen.dart` — **the actual splash screen.** State machine
   (`SplashState`: intro → looping → outro → done), every live-tunable
   parameter (with its current tuned default), the debug slider panel, and
-  the entry point (`SplashDemoScreen`).
+  the entry point (`SplashDemoScreen`). The demo screen's layout is a `Row`:
+  left side is the splash itself rendered inside a fixed phone-sized frame
+  (`_phoneWidth`/`_phoneHeight`, 390×844 — iPhone 13/14/15 logical points,
+  scaled to fit via `FittedBox` but never stretched off that aspect ratio),
+  so it's an accurate, device-shaped preview to show a developer — not the
+  raw browser-window canvas. All debug UI (state badge, sliders, Play
+  Intro/Trigger buttons) lives in a separate panel on the right and never
+  appears inside the phone frame itself.
 - `lib/cloud_spiral_painter.dart` — `CustomPainter` that draws the cloud
   stream: one continuous logarithmic spiral of cloud sprites anchored at the
   logo's tip, not a set of concentric rings. Read the doc comments at the
@@ -73,12 +80,12 @@ save it back (the slider only changes runtime state, not the source).
 |---|---|---|---|
 | `_speedMultiplier` | 0.04 | Speed | Loop flow speed |
 | `_sizeMultiplier` | 1.82 | Scale Out | Cloud size at the outer edge |
-| `_startSizeMultiplier` | 0.10 | Scale In | Cloud size at the logo tip (spawn) |
-| `_particleCount` | 60 | Count | Base puff count |
+| `_startSizeMultiplier` | 1.02 | Scale In | Cloud size at the logo tip (spawn) |
+| `_particleCount` | 86 | Count | Base puff count |
 | `_particleSpacing` | 1.11 | Spacing | Density (higher = sparser) |
 | `_squashFactor` | 0.70 | Squash | Ellipse squash of the spiral |
 | `_tiltAngleDeg` | -40.0 | Tilt | Tilt axis of the squash |
-| `_turnsMultiplier` | 2.03 | Turns | How many turns the spiral winds |
+| `_turnsMultiplier` | 1.81 | Turns | How many turns the spiral winds |
 | `_reachMultiplier` | 2.55 | Reach | How far out the spiral reaches |
 | `_globalZoom` | 1.91 | Zoom | Overall zoom of spiral+logo together |
 | `_fillAmount` | 100.0 | Fill | % of the spiral populated with clouds (intro wipes 0→100) |
