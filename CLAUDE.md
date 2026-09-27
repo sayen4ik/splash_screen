@@ -51,8 +51,31 @@ tuned live with sliders before porting it.
 - `lib/cloud_spiral_config.dart` — the *non-live* base config (spawn angle,
   radius power curve, particle count, min/max scale factors). The live
   sliders in `splash_screen.dart` multiply on top of these.
-- `lib/main.dart` — app entry; shows a picker between the splash demo and
-  the old vortex-tuning playground (see below).
+- `lib/main.dart` — app entry; shows a picker between the splash demo,
+  the old vortex-tuning playground, and the standalone curtain-reveal
+  prototype (see below).
+- `lib/curtain_overlay.dart` — reusable "theater curtain" reveal
+  (`CurtainOverlay` widget), extracted from `curtain_reveal_demo.dart` so
+  it can sit on top of the real splash's phone frame without duplicating
+  risk into the working demo screen. Two panels split down the middle,
+  each drawing the same full screenshot (`assets/curtain_mock_screenshot.
+  webp`) + fold texture (`assets/curtain_fold_texture.webp`) so the seam
+  lines up; the fold texture fades in first (over `fadeMs`), THEN the
+  panels part along a curved (Bezier) edge (over `durationMs`) whose top
+  moves on a faster curve than the bottom, bowing mid-animation before
+  straightening out. Autoplays on mount, calls `onComplete` once fully
+  open. In `splash_screen.dart`, a "Починати зі штор" checkbox
+  (`_startWithCurtain`) controls whether `CurtainOverlay` is shown on top
+  of the phone frame each time `_playIntro` runs (`_showCurtain`, cleared
+  via `onComplete`) — the cloud-spiral intro underneath plays either way,
+  the curtain (when on) just covers it for the first `fadeMs +
+  durationMs` before removing itself.
+- `lib/curtain_reveal_demo.dart` — the standalone prototype screen this
+  was built and tuned in (own copy of the same clipper/panel logic, plus
+  live sliders for Fade/Duration/Arc/Top Lead and an "Open real splash"
+  button). Left as-is/self-contained rather than refactored to share code
+  with `curtain_overlay.dart`, so tuning it further can't regress the
+  version embedded in the real splash.
 - `lib/droste_vortex_painter.dart`, `droste_vortex_config.dart`,
   `spiral_debug_screen.dart`, `checkerboard_painter.dart` — an **earlier,
   now-unused approach** (nested self-similar copies of one spiral image,

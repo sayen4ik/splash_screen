@@ -10,6 +10,7 @@ import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle
 
 import 'cloud_spiral_config.dart';
 import 'cloud_spiral_painter.dart';
+import 'curtain_overlay.dart';
 
 enum SplashState { intro, looping, outro, done }
 
@@ -112,6 +113,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
   SplashState _state = SplashState.intro;
   double _stateElapsedSec = 0;
+
+  /// Whether the splash should open with the curtain-reveal overlay
+  /// before the cloud-spiral intro is visible. Toggled from the "Live
+  /// tuning controls" panel; the curtain plays on top of the phone frame
+  /// (which keeps running its own intro underneath) and removes itself
+  /// once fully open.
+  bool _startWithCurtain = true;
+  bool _showCurtain = true;
 
   double _spiralTimeSec = 0;
   double _breathe = 0; // 0..1, drives the logo glow pulse
@@ -532,6 +541,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     setState(() {
       _state = SplashState.intro;
       _stateElapsedSec = 0;
+      _showCurtain = _startWithCurtain;
     });
   }
 
@@ -756,7 +766,19 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(40),
-                            child: splashContent,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                splashContent,
+                                if (_showCurtain)
+                                  CurtainOverlay(
+                                    width: _phoneWidth,
+                                    height: _phoneHeight,
+                                    onComplete: () =>
+                                        setState(() => _showCurtain = false),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -1180,7 +1202,27 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () => setState(
+                    () => _startWithCurtain = !_startWithCurtain,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Checkbox(
+                        value: _startWithCurtain,
+                        onChanged: (v) =>
+                            setState(() => _startWithCurtain = v ?? false),
+                      ),
+                      const Text(
+                        'Починати зі штор',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
                 Row(
                   children: [
                     OutlinedButton(

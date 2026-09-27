@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'curtain_reveal_demo.dart';
 import 'spiral_debug_screen.dart';
 import 'splash_screen.dart';
 
@@ -46,6 +47,13 @@ class _EntryScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const SpiralDebugScreen()),
               ),
               child: const Text('Vortex tuning playground'),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CurtainRevealDemo()),
+              ),
+              child: const Text('Curtain reveal (prototype)'),
             ),
           ],
         ),
