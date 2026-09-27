@@ -81,16 +81,22 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   late final TextEditingController _configController;
   String? _configApplyError;
 
-  // Background: drives the whole base gradient (see `build()`) — the
-  // gradient's other 3 stops are just darker lerps toward black of this
-  // one color, so one knob reshapes the whole thing while keeping the
-  // dark-to-light gradient look. Foreground: the color of the bottom-to-
-  // top tint overlay drawn on top of the scene (alpha still fades
-  // 40%→0% bottom-to-top; only the hue is live here).
-  Color _backgroundColor = const Color(0xFFC9C3D9);
-  Color _foregroundColor = const Color(0xFFE6BAFF);
-  late final TextEditingController _backgroundHexController;
-  late final TextEditingController _foregroundHexController;
+  // Background: a plain 2-stop gradient (top color -> bottom color) behind
+  // everything — always fully opaque, no opacity knob needed. Foreground:
+  // the tint overlay drawn on top of the whole scene, also top color ->
+  // bottom color, but each end has its own live opacity (0-100%) instead
+  // of the old fixed 0%/40% fade — so both the hue *and* how strong the
+  // fade is at each end are tunable.
+  Color _bgTopColor = const Color(0xFF07020D);
+  Color _bgBottomColor = const Color(0xFFC9C3D9);
+  Color _fgTopColor = const Color(0xFFE6BAFF);
+  Color _fgBottomColor = const Color(0xFFE6BAFF);
+  double _fgTopOpacity = 0.0;
+  double _fgBottomOpacity = 40.0;
+  late final TextEditingController _bgTopHexController;
+  late final TextEditingController _bgBottomHexController;
+  late final TextEditingController _fgTopHexController;
+  late final TextEditingController _fgBottomHexController;
 
   late final Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
@@ -205,11 +211,17 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     _loadImages();
     _ticker = createTicker(_onTick)..start();
     _configController = TextEditingController(text: _encodeConfig());
-    _backgroundHexController = TextEditingController(
-      text: _colorToHex(_backgroundColor),
+    _bgTopHexController = TextEditingController(
+      text: _colorToHex(_bgTopColor),
     );
-    _foregroundHexController = TextEditingController(
-      text: _colorToHex(_foregroundColor),
+    _bgBottomHexController = TextEditingController(
+      text: _colorToHex(_bgBottomColor),
+    );
+    _fgTopHexController = TextEditingController(
+      text: _colorToHex(_fgTopColor),
+    );
+    _fgBottomHexController = TextEditingController(
+      text: _colorToHex(_fgBottomColor),
     );
   }
 
@@ -217,8 +229,10 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   void dispose() {
     _ticker.dispose();
     _configController.dispose();
-    _backgroundHexController.dispose();
-    _foregroundHexController.dispose();
+    _bgTopHexController.dispose();
+    _bgBottomHexController.dispose();
+    _fgTopHexController.dispose();
+    _fgBottomHexController.dispose();
     super.dispose();
   }
 
@@ -236,16 +250,28 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   static String _colorToHex(Color c) =>
       (c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase();
 
-  void _applyBackgroundHex() {
-    final parsed = _parseHex(_backgroundHexController.text);
+  void _applyBgTopHex() {
+    final parsed = _parseHex(_bgTopHexController.text);
     if (parsed == null) return;
-    setState(() => _backgroundColor = parsed);
+    setState(() => _bgTopColor = parsed);
   }
 
-  void _applyForegroundHex() {
-    final parsed = _parseHex(_foregroundHexController.text);
+  void _applyBgBottomHex() {
+    final parsed = _parseHex(_bgBottomHexController.text);
     if (parsed == null) return;
-    setState(() => _foregroundColor = parsed);
+    setState(() => _bgBottomColor = parsed);
+  }
+
+  void _applyFgTopHex() {
+    final parsed = _parseHex(_fgTopHexController.text);
+    if (parsed == null) return;
+    setState(() => _fgTopColor = parsed);
+  }
+
+  void _applyFgBottomHex() {
+    final parsed = _parseHex(_fgBottomHexController.text);
+    if (parsed == null) return;
+    setState(() => _fgBottomColor = parsed);
   }
 
   /// Every slider's current value, keyed by the same short names the
@@ -268,8 +294,12 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     'rotate': _rotationDeg,
     'spawnX': _spawnOffsetX,
     'spawnY': _spawnOffsetY,
-    'background': _colorToHex(_backgroundColor),
-    'foreground': _colorToHex(_foregroundColor),
+    'bgTop': _colorToHex(_bgTopColor),
+    'bgBottom': _colorToHex(_bgBottomColor),
+    'fgTop': _colorToHex(_fgTopColor),
+    'fgBottom': _colorToHex(_fgBottomColor),
+    'fgTopOpacity': _fgTopOpacity,
+    'fgBottomOpacity': _fgBottomOpacity,
   };
 
   String _encodeConfig() =>
@@ -354,13 +384,27 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         if (asDouble('spawnY') case final v?) {
           _spawnOffsetY = v.clamp(-200, 200);
         }
-        if (asColor('background') case final c?) {
-          _backgroundColor = c;
-          _backgroundHexController.text = _colorToHex(c);
+        if (asColor('bgTop') case final c?) {
+          _bgTopColor = c;
+          _bgTopHexController.text = _colorToHex(c);
         }
-        if (asColor('foreground') case final c?) {
-          _foregroundColor = c;
-          _foregroundHexController.text = _colorToHex(c);
+        if (asColor('bgBottom') case final c?) {
+          _bgBottomColor = c;
+          _bgBottomHexController.text = _colorToHex(c);
+        }
+        if (asColor('fgTop') case final c?) {
+          _fgTopColor = c;
+          _fgTopHexController.text = _colorToHex(c);
+        }
+        if (asColor('fgBottom') case final c?) {
+          _fgBottomColor = c;
+          _fgBottomHexController.text = _colorToHex(c);
+        }
+        if (asDouble('fgTopOpacity') case final v?) {
+          _fgTopOpacity = v.clamp(0, 100);
+        }
+        if (asDouble('fgBottomOpacity') case final v?) {
+          _fgBottomOpacity = v.clamp(0, 100);
         }
         _configApplyError = null;
       });
@@ -544,13 +588,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        Color.lerp(Colors.black, _backgroundColor, 0.03)!,
-                        Color.lerp(Colors.black, _backgroundColor, 0.28)!,
-                        Color.lerp(Colors.black, _backgroundColor, 0.68)!,
-                        _backgroundColor,
-                      ],
-                      stops: const [0.0, 0.45, 0.78, 1.0],
+                      colors: [_bgTopColor, _bgBottomColor],
                     ),
                   ),
                 ),
@@ -638,19 +676,19 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                 ),
               ],
             ),
-          // Cosmetic tint over the whole splash: solid-ish at the bottom,
-          // fading to fully transparent at the top. Sits above the scene
-          // (clouds/logo), as part of the phone-frame content itself — not
-          // debug UI, so it stays inside `splashContent`.
+          // Cosmetic tint over the whole splash, top color -> bottom color,
+          // each with its own live opacity. Sits above the scene (clouds/
+          // logo), as part of the phone-frame content itself — not debug
+          // UI, so it stays inside `splashContent`.
           IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
-                    _foregroundColor.withValues(alpha: 0.4),
-                    _foregroundColor.withValues(alpha: 0.0),
+                    _fgTopColor.withValues(alpha: _fgTopOpacity / 100),
+                    _fgBottomColor.withValues(alpha: _fgBottomOpacity / 100),
                   ],
                 ),
               ),
@@ -746,23 +784,49 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                         ),
                         const SizedBox(height: 8),
                         _ColorPickerRow(
-                          label: 'Background',
+                          label: 'BG Top',
                           description:
-                              'Базовий градієнт сцени (низ — цей колір, '
-                              'решта — темніші відтінки до чорного)',
-                          color: _backgroundColor,
-                          controller: _backgroundHexController,
-                          onSubmitted: _applyBackgroundHex,
+                              'Колір верхньої частини базового градієнта '
+                              'сцени',
+                          color: _bgTopColor,
+                          controller: _bgTopHexController,
+                          onSubmitted: _applyBgTopHex,
                         ),
                         const SizedBox(height: 8),
                         _ColorPickerRow(
-                          label: 'Foreground',
+                          label: 'BG Bottom',
                           description:
-                              'Колір тонування зверху сцени (прозорість '
-                              'все ще йде 40%→0% знизу вгору)',
-                          color: _foregroundColor,
-                          controller: _foregroundHexController,
-                          onSubmitted: _applyForegroundHex,
+                              'Колір нижньої частини базового градієнта '
+                              'сцени',
+                          color: _bgBottomColor,
+                          controller: _bgBottomHexController,
+                          onSubmitted: _applyBgBottomHex,
+                        ),
+                        const SizedBox(height: 8),
+                        _ColorPickerRow(
+                          label: 'FG Top',
+                          description:
+                              'Колір верхньої частини тонування зверху '
+                              'сцени',
+                          color: _fgTopColor,
+                          controller: _fgTopHexController,
+                          onSubmitted: _applyFgTopHex,
+                          opacity: _fgTopOpacity,
+                          onOpacityChanged: (v) =>
+                              setState(() => _fgTopOpacity = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _ColorPickerRow(
+                          label: 'FG Bottom',
+                          description:
+                              'Колір нижньої частини тонування зверху '
+                              'сцени',
+                          color: _fgBottomColor,
+                          controller: _fgBottomHexController,
+                          onSubmitted: _applyFgBottomHex,
+                          opacity: _fgBottomOpacity,
+                          onOpacityChanged: (v) =>
+                              setState(() => _fgBottomOpacity = v),
                         ),
                         const SizedBox(height: 20),
                         const Text(
@@ -1133,6 +1197,8 @@ class _ColorPickerRow extends StatelessWidget {
     required this.color,
     required this.controller,
     required this.onSubmitted,
+    this.opacity,
+    this.onOpacityChanged,
   });
 
   final String label;
@@ -1140,6 +1206,13 @@ class _ColorPickerRow extends StatelessWidget {
   final Color color;
   final TextEditingController controller;
   final VoidCallback onSubmitted;
+
+  /// When non-null (alongside [onOpacityChanged]), an extra 0–100% slider
+  /// is shown under the hex row — used for the foreground tint, whose
+  /// opacity at each end is itself live, unlike the always-opaque
+  /// background.
+  final double? opacity;
+  final ValueChanged<double>? onOpacityChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1209,6 +1282,46 @@ class _ColorPickerRow extends StatelessWidget {
               style: const TextStyle(color: Colors.white38, fontSize: 10),
             ),
           ),
+          if (opacity != null && onOpacityChanged != null)
+            Row(
+              children: [
+                const SizedBox(
+                  width: 76 + 28 + 8,
+                  child: Text(
+                    'Opacity',
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 2,
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 7,
+                      ),
+                    ),
+                    child: Slider(
+                      value: opacity!,
+                      min: 0,
+                      max: 100,
+                      divisions: 100,
+                      onChanged: onOpacityChanged,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 44,
+                  child: Text(
+                    '${opacity!.toStringAsFixed(0)}%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );

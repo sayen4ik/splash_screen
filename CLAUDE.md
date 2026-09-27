@@ -118,21 +118,24 @@ save it back (the slider only changes runtime state, not the source).
 | `_spawnOffsetX` | 1.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
 | `_spawnOffsetY` | 10.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
 
-There's also a cosmetic tint drawn over the whole splash, bottom to top:
-the "Foreground" color at 40% opacity at the bottom fading to 0% (fully
-transparent) at the top — the hue is live (`_foregroundColor`, default
-`#E6BAFF`), the alpha fade itself is not. It sits above the clouds/logo
-scene but below the debug slider UI.
+The "Colors" section at the top of the right panel has 4 hex color rows
+(`RRGGBB`, no `#`, each next to a live swatch — an invalid hex is just
+ignored, leaving the previous color in place):
 
-"Background" (`_backgroundColor`, default `#C9C3D9`) drives the base
-gradient behind everything: the other 3 stops are just `Color.lerp` steps
-from black toward this one color (see `build()`), so one hex value
-reshapes the whole dark-to-light gradient without needing 4 separate
-color pickers. Both colors live in the "Colors" section at the top of the
-right panel, each a hex text box (`RRGGBB`, no `#`) next to a live
-swatch — an invalid hex is just ignored, leaving the previous color in
-place. Both are included in "Share params" (`background`/`foreground`,
-as hex strings) alongside every slider.
+- **BG Top** / **BG Bottom** (`_bgTopColor`/`_bgBottomColor`, default
+  `#07020D`/`#C9C3D9`) — a plain 2-stop `LinearGradient` behind
+  everything, always fully opaque (no opacity knob — it's the solid base
+  of the whole scene).
+- **FG Top** / **FG Bottom** (`_fgTopColor`/`_fgBottomColor`, default
+  `#E6BAFF`/`#E6BAFF`) — the cosmetic tint drawn *over* the whole scene
+  (above clouds/logo, below the debug UI), also top color → bottom
+  color, but each end additionally has its own live opacity slider
+  (`_fgTopOpacity`/`_fgBottomOpacity`, 0–100%, default 0%/40%) — unlike
+  the background, both hue *and* fade strength are tunable per end here.
+
+All 6 values are included in "Share params" (`bgTop`/`bgBottom`/`fgTop`/
+`fgBottom` as hex strings, `fgTopOpacity`/`fgBottomOpacity` as numbers)
+alongside every slider.
 
 Intro (~1.5s): Fill 0→100%, Rotate 70°→0°, Zoom 1.0→baseline, speed decays
 from 7x, logo scales in with a slight tilt (35°→0°) — all eased with
