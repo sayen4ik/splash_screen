@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -59,6 +60,17 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   static const _introRotationStartDeg = 70.0;
 
   List<ui.Image>? _cloudImages;
+
+  // Uploaded replacements for the logo and the 3 cloud sprite slots — set
+  // via the "Assets" panel on the right, letting a developer preview their
+  // own art without editing code. `null` at an index means "use the
+  // bundled default" (from `assets/logo.png` / `_cloudAssetPaths`). Bytes
+  // are kept alongside the decoded `ui.Image` because the logo is drawn as
+  // an `Image.memory` widget (needs bytes) while cloud sprites are drawn by
+  // `CloudSpiralPainter` on a raw `Canvas` (needs a decoded `ui.Image`).
+  Uint8List? _customLogoBytes;
+  final List<Uint8List?> _customCloudBytes = List<Uint8List?>.filled(3, null);
+  final List<ui.Image?> _customCloudImages = List<ui.Image?>.filled(3, null);
 
   late final Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
@@ -172,6 +184,42 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     final frame = await codec.getNextFrame();
     return frame.image;
   }
+
+  Future<ui.Image> _decodeBytes(Uint8List bytes) async {
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    return frame.image;
+  }
+
+  Future<Uint8List?> _pickImageBytes() async {
+    final files = await FilePicker.pickFiles(type: FileType.image);
+    if (files.isEmpty) return null;
+    return files.single.readAsBytes();
+  }
+
+  Future<void> _pickLogo() async {
+    final bytes = await _pickImageBytes();
+    if (bytes == null || !mounted) return;
+    setState(() => _customLogoBytes = bytes);
+  }
+
+  void _resetLogo() => setState(() => _customLogoBytes = null);
+
+  Future<void> _pickCloud(int index) async {
+    final bytes = await _pickImageBytes();
+    if (bytes == null) return;
+    final image = await _decodeBytes(bytes);
+    if (!mounted) return;
+    setState(() {
+      _customCloudBytes[index] = bytes;
+      _customCloudImages[index] = image;
+    });
+  }
+
+  void _resetCloud(int index) => setState(() {
+    _customCloudBytes[index] = null;
+    _customCloudImages[index] = null;
+  });
 
   void _onTick(Duration elapsed) {
     final dt = (elapsed - _lastElapsed).inMicroseconds / 1e6;
@@ -329,7 +377,10 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                         if (_cloudImages != null)
                           CustomPaint(
                             painter: CloudSpiralPainter(
-                              images: _cloudImages!,
+                              images: [
+                                for (var i = 0; i < _cloudImages!.length; i++)
+                                  _customCloudImages[i] ?? _cloudImages![i],
+                              ],
                               config: _config,
                               timeSeconds: _spiralTimeSec,
                               sizeMultiplier: _sizeMultiplier,
@@ -363,7 +414,12 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                                     ),
                                   ],
                                 ),
-                                child: Image.asset('assets/logo.png'),
+                                child: _customLogoBytes != null
+                                    ? Image.memory(
+                                        _customLogoBytes!,
+                                        fit: BoxFit.contain,
+                                      )
+                                    : Image.asset('assets/logo.png'),
                               ),
                             ),
                           ),
@@ -472,6 +528,52 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
+                        const Text(
+                          'Assets',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _AssetPickerRow(
+                          label: 'Logo',
+                          preview: _customLogoBytes != null
+                              ? Image.memory(
+                                  _customLogoBytes!,
+                                  fit: BoxFit.contain,
+                                )
+                              : Image.asset(
+                                  'assets/logo.png',
+                                  fit: BoxFit.contain,
+                                ),
+                          onPick: _pickLogo,
+                          onReset: _customLogoBytes != null
+                              ? _resetLogo
+                              : null,
+                        ),
+                        const SizedBox(height: 8),
+                        for (var i = 0; i < _cloudAssetPaths.length; i++) ...[
+                          _AssetPickerRow(
+                            label: 'Cloud ${i + 1}',
+                            preview: _customCloudBytes[i] != null
+                                ? Image.memory(
+                                    _customCloudBytes[i]!,
+                                    fit: BoxFit.contain,
+                                  )
+                                : Image.asset(
+                                    _cloudAssetPaths[i],
+                                    fit: BoxFit.contain,
+                                  ),
+                            onPick: () => _pickCloud(i),
+                            onReset: _customCloudBytes[i] != null
+                                ? () => _resetCloud(i)
+                                : null,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        const SizedBox(height: 8),
                         _LabeledSlider(
                           label: 'Speed',
                           value: _speedMultiplier,
@@ -631,6 +733,71 @@ class _StateBadge extends StatelessWidget {
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
         ),
+      ),
+    );
+  }
+}
+
+/// One row in the "Assets" panel: a thumbnail of the current image (bundled
+/// default, or an uploaded replacement), a label, an upload button, and —
+/// only once something's been uploaded — a reset button to go back to the
+/// bundled default.
+class _AssetPickerRow extends StatelessWidget {
+  const _AssetPickerRow({
+    required this.label,
+    required this.preview,
+    required this.onPick,
+    this.onReset,
+  });
+
+  final String label;
+  final Widget preview;
+  final VoidCallback onPick;
+  final VoidCallback? onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              width: 36,
+              height: 36,
+              color: Colors.white10,
+              child: preview,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.upload, size: 18, color: Colors.white70),
+            tooltip: 'Upload image',
+            onPressed: onPick,
+          ),
+          if (onReset != null)
+            IconButton(
+              icon: const Icon(
+                Icons.replay,
+                size: 18,
+                color: Colors.white38,
+              ),
+              tooltip: 'Reset to default',
+              onPressed: onReset,
+            ),
+        ],
       ),
     );
   }

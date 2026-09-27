@@ -18,7 +18,16 @@ tuned live with sliders before porting it.
   so it's an accurate, device-shaped preview to show a developer — not the
   raw browser-window canvas. All debug UI (state badge, sliders, Play
   Intro/Trigger buttons) lives in a separate panel on the right and never
-  appears inside the phone frame itself.
+  appears inside the phone frame itself. The right panel also has an
+  "Assets" section (`_AssetPickerRow`) with one row for the logo and one
+  per active cloud sprite slot — the upload button opens the OS/browser's
+  native file picker (via the `file_picker` package) so a developer can
+  preview their own art without touching code; a row's reset button (only
+  shown once something's been uploaded) reverts that slot back to the
+  bundled default. Uploaded images are session-only (kept in memory as
+  `_customLogoBytes`/`_customCloudImages`), never written to `assets/` or
+  `pubspec.yaml` — swapping in a new *permanent* default still means adding
+  the file and updating `_cloudAssetPaths`/`assets/logo.png` as before.
 - `lib/cloud_spiral_painter.dart` — `CustomPainter` that draws the cloud
   stream: one continuous logarithmic spiral of cloud sprites anchored at the
   logo's tip, not a set of concentric rings. Read the doc comments at the
