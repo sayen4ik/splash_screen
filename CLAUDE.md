@@ -90,6 +90,7 @@ save it back (the slider only changes runtime state, not the source).
 | `_speedMultiplier` | 0.04 | Speed | Loop flow speed |
 | `_sizeMultiplier` | 1.82 | Scale Out | Cloud size at the outer edge |
 | `_startSizeMultiplier` | 1.02 | Scale In | Cloud size at the logo tip (spawn) |
+| `_sizeMidpoint` | 0.5 | Scale Mid | Where (0..1 along `p`) a puff is exactly halfway between Scale In and Scale Out in size — 0.5 is the old plain-linear growth; push toward 0/1 to shift when the size-up happens |
 | `_particleCount` | 86 | Count | Base puff count |
 | `_particleSpacing` | 1.11 | Spacing | Density (higher = sparser) |
 | `_squashFactor` | 0.70 | Squash | Ellipse squash of the spiral |

@@ -26,6 +26,7 @@ class CloudSpiralPainter extends CustomPainter {
     required this.timeSeconds,
     this.sizeMultiplier = 1.0,
     this.startSizeMultiplier = 1.0,
+    this.sizeMidpoint = 0.5,
     this.particleSpacing = 1.0,
     this.squashFactor = 1.0,
     this.tiltAngleRad = 0.0,
@@ -59,6 +60,19 @@ class CloudSpiralPainter extends CustomPainter {
   /// two reads as puffs visibly ballooning outward; a small gap reads as
   /// near-uniform size along the whole spiral).
   final double startSizeMultiplier;
+
+  /// Where, along life-progress `p` (0 = logo tip, 1 = outer edge), a
+  /// particle sits exactly halfway between [startSizeMultiplier] and
+  /// [sizeMultiplier] in size. 0.5 (default) means the size grows evenly —
+  /// a plain linear interpolation, halfway there at `p` = 0.5. Push it
+  /// toward 0 to make puffs balloon up to full size quickly (right after
+  /// spawning) and then hold that size for the rest of the trip; push it
+  /// toward 1 to keep puffs small for most of the trip and have them only
+  /// balloon up right at the end. Implemented as Perlin's "bias" remap of
+  /// `p` before it's used for size (only size — radius/angle/opacity still
+  /// use the raw `p`, so this never changes the spiral's shape or pacing,
+  /// only how the size grows along it).
+  final double sizeMidpoint;
 
   /// Live control over how far apart consecutive puffs sit along the
   /// spiral. 1.0 = [particleCount]'s own default density; less
@@ -187,7 +201,7 @@ class CloudSpiralPainter extends CustomPainter {
       final angle =
           config.spawnAngleRad +
           config.totalTurns * turnsMultiplier * 2 * math.pi * p;
-      final w = sMin + (sMax - sMin) * p;
+      final w = sMin + (sMax - sMin) * _bias(p, sizeMidpoint);
       final h = w * aspect;
 
       double opacity;
@@ -245,4 +259,15 @@ class CloudSpiralPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CloudSpiralPainter oldDelegate) => true;
+}
+
+/// Ken Perlin's "bias" remap: a monotonic curve on `t` in [0, 1] such that
+/// `bias(0.5, b) == b` — i.e. `b` is exactly where the curve crosses the
+/// midpoint. `b == 0.5` is the identity (`bias(t, 0.5) == t`), which is why
+/// [CloudSpiralPainter.sizeMidpoint]'s default of 0.5 reproduces the old
+/// plain-linear size growth exactly. `b` is clamped away from the 0/1 ends
+/// to avoid the division blowing up there.
+double _bias(double t, double b) {
+  final clampedB = b.clamp(0.001, 0.999);
+  return t / ((1 / clampedB - 2) * (1 - t) + 1);
 }

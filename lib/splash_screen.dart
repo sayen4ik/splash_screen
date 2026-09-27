@@ -103,6 +103,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// the two reads as puffs visibly ballooning outward as they travel.
   double _startSizeMultiplier = 1.02;
 
+  /// Where (0..1, along life-progress `p`) a puff sits exactly halfway
+  /// between Scale In and Scale Out in size. 0.5 = old plain-linear growth.
+  /// Push toward 0 to have puffs balloon up to full size quickly right
+  /// after spawning and hold it the rest of the way out; push toward 1 to
+  /// stay small for most of the trip and only balloon up near the edge.
+  /// Shown in the UI as "Scale Midpoint".
+  double _sizeMidpoint = 0.5;
+
   /// Base number of puffs `_particleSpacing` scales the density from
   /// (overrides [CloudSpiralConfig.particleCount] live).
   double _particleCount = 86;
@@ -385,6 +393,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                               timeSeconds: _spiralTimeSec,
                               sizeMultiplier: _sizeMultiplier,
                               startSizeMultiplier: _startSizeMultiplier,
+                              sizeMidpoint: _sizeMidpoint,
                               particleSpacing: _particleSpacing,
                               squashFactor: _squashFactor,
                               tiltAngleRad: _tiltAngleDeg * math.pi / 180,
@@ -599,6 +608,15 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           max: 4.0,
                           onChanged: (v) =>
                               setState(() => _startSizeMultiplier = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Scale Mid',
+                          value: _sizeMidpoint,
+                          min: 0.05,
+                          max: 0.95,
+                          onChanged: (v) =>
+                              setState(() => _sizeMidpoint = v),
                         ),
                         const SizedBox(height: 8),
                         _LabeledSlider(
