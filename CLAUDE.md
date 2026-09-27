@@ -111,6 +111,7 @@ save it back (the slider only changes runtime state, not the source).
 | `_tiltAngleDeg` | -40.0 | Tilt | Tilt axis of the squash |
 | `_turnsMultiplier` | 1.81 | Turns | How many turns the spiral winds |
 | `_reachMultiplier` | 2.55 | Reach | How far out the spiral reaches |
+| `_innerRadiusMultiplier` | 1.0 | Inner R | Radius of the spiral's very first turn (where puffs spawn) — raise it so the first turn wraps around the logo instead of landing on top of it; the outer end of the radius curve is unaffected |
 | `_globalZoom` | 1.91 | Zoom | Overall zoom of spiral+logo together |
 | `_fillAmount` | 100.0 | Fill | % of the spiral populated with clouds (intro wipes 0→100) |
 | `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |

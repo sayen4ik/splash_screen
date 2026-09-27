@@ -32,6 +32,7 @@ class CloudSpiralPainter extends CustomPainter {
     this.tiltAngleRad = 0.0,
     this.turnsMultiplier = 1.0,
     this.reachMultiplier = 1.0,
+    this.innerRadiusMultiplier = 1.0,
     this.fillAmount = 1.0,
     this.spawnOffset = Offset.zero,
     int? particleCount,
@@ -106,6 +107,14 @@ class CloudSpiralPainter extends CustomPainter {
   /// regardless of screen size; `reachStretch` is what adapts that to the
   /// actual live canvas.
   final double reachMultiplier;
+
+  /// Live multiplier on [config.spawnRadius] — how far from the spiral's
+  /// own center the very first turn sits. Raising this pushes the whole
+  /// radius curve's *starting* point outward (the r(p) formula still ends
+  /// at the same outer `rMaxRef` regardless — see `paint`), which is what
+  /// you want when the innermost turn is landing on top of the logo
+  /// instead of wrapping around it. 1.0 = [config.spawnRadius] unchanged.
+  final double innerRadiusMultiplier;
 
   /// Live override for [config.particleCount] — the base density
   /// `particleSpacing` scales from. Defaults to the config's own value.
@@ -207,9 +216,10 @@ class CloudSpiralPainter extends CustomPainter {
       // physical distance a fully-grown (p near 1) particle ends up at
       // stretches on a bigger canvas, via `pExt`.
       final pExt = p * reachStretch;
+      final spawnRadius = config.spawnRadius * innerRadiusMultiplier;
       final r =
-          config.spawnRadius +
-          (rMaxRef - config.spawnRadius) * math.pow(pExt, config.radiusPower);
+          spawnRadius +
+          (rMaxRef - spawnRadius) * math.pow(pExt, config.radiusPower);
       final angle =
           config.spawnAngleRad +
           config.totalTurns * turnsMultiplier * 2 * math.pi * p;

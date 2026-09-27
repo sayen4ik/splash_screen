@@ -142,6 +142,13 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// own corner distance, so it fills a tall portrait screen edge to edge).
   double _reachMultiplier = 2.55;
 
+  /// Live multiplier on [CloudSpiralConfig.spawnRadius] — how far out the
+  /// very first turn sits. Raising this pushes puffs off the logo (the
+  /// r(p) curve's outer end is unaffected — see [CloudSpiralPainter]),
+  /// useful when the innermost turn is landing on top of the logo instead
+  /// of wrapping around it. Shown in the UI as "Inner Radius".
+  double _innerRadiusMultiplier = 1.0;
+
   /// Live overall zoom: scales the whole composition (spiral + logo)
   /// together around screen center, on top of every other knob above —
   /// for making the entire splash bigger/smaller as one piece, as opposed
@@ -210,6 +217,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     'tilt': _tiltAngleDeg,
     'turns': _turnsMultiplier,
     'reach': _reachMultiplier,
+    'innerRadius': _innerRadiusMultiplier,
     'zoom': _globalZoom,
     'fill': _fillAmount,
     'rotate': _rotationDeg,
@@ -276,6 +284,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         }
         if (asDouble('reach') case final v?) {
           _reachMultiplier = v.clamp(0.5, 6.0);
+        }
+        if (asDouble('innerRadius') case final v?) {
+          _innerRadiusMultiplier = v.clamp(0.5, 10.0);
         }
         if (asDouble('zoom') case final v?) {
           _globalZoom = v.clamp(0.3, 5.0);
@@ -523,6 +534,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                               tiltAngleRad: _tiltAngleDeg * math.pi / 180,
                               turnsMultiplier: _turnsMultiplier,
                               reachMultiplier: _reachMultiplier,
+                              innerRadiusMultiplier: _innerRadiusMultiplier,
                               fillAmount: effectiveFill,
                               spawnOffset: Offset(
                                 _spawnOffsetX,
@@ -824,6 +836,19 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                               'центру до краю екрана',
                           onChanged: (v) =>
                               setState(() => _reachMultiplier = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Inner R',
+                          value: _innerRadiusMultiplier,
+                          min: 0.5,
+                          max: 10.0,
+                          description:
+                              'Радіус першого витка (де хмаринки з\'являються)'
+                              ' — більше, щоб огортав лого, а не налазив на '
+                              'нього',
+                          onChanged: (v) =>
+                              setState(() => _innerRadiusMultiplier = v),
                         ),
                         const SizedBox(height: 8),
                         _LabeledSlider(
