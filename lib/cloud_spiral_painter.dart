@@ -33,6 +33,7 @@ class CloudSpiralPainter extends CustomPainter {
     this.turnsMultiplier = 1.0,
     this.reachMultiplier = 1.0,
     this.innerRadiusMultiplier = 1.0,
+    this.depthSpeedPower = 1.0,
     this.fillAmount = 1.0,
     this.spawnOffset = Offset.zero,
     int? particleCount,
@@ -116,6 +117,15 @@ class CloudSpiralPainter extends CustomPainter {
   /// instead of wrapping around it. 1.0 = [config.spawnRadius] unchanged.
   final double innerRadiusMultiplier;
 
+  /// Live power curve warping a puff's real-time pacing based on where it
+  /// currently is along its own life (see `paint`'s `pRaw` → `p` remap).
+  /// 1.0 = uniform pacing (old behavior). Above 1.0, puffs move slowly
+  /// near the logo tip and accelerate as they travel outward — the
+  /// near/far parallax feel of "close puffs move faster, far ones slower"
+  /// — with a bunching-up-near-the-tip side effect (puffs are always
+  /// evenly staggered in raw time, so slow regions end up denser).
+  final double depthSpeedPower;
+
   /// Live override for [config.particleCount] — the base density
   /// `particleSpacing` scales from. Defaults to the config's own value.
   final int particleCount;
@@ -181,7 +191,22 @@ class CloudSpiralPainter extends CustomPainter {
     // keeps the same sprite for its whole trip out from the tip, while
     // different puffs along the spiral still read as a varied mix.
     final particles = List.generate(effectiveCount, (i) {
-      final p = ((timeSeconds / config.loopSeconds) + i / effectiveCount) % 1.0;
+      // `pRaw` is the strictly-linear-in-time stagger clock — it's what
+      // guarantees the even, full-coverage tiling described above and
+      // must stay linear for that to hold. `p` (everywhere else in this
+      // file: radius, angle, opacity, size) is `pRaw` warped through
+      // `depthSpeedPower` — since a monotonic power curve preserves
+      // ordering, sorting/coverage are unaffected, but a puff's *real-time*
+      // speed through life now depends on where it is: with
+      // depthSpeedPower > 1, dp/dpRaw → 0 near the tip (a puff lingers,
+      // slow, close to the logo) and grows toward the edge (the same puff
+      // accelerates as it gets further out) — exactly the near/far
+      // parallax feel. 1.0 = the old uniform pacing. As a side effect,
+      // puffs bunch up densely where they're slow (near the tip) and
+      // thin out where they're fast (near the edge), like a fountain.
+      final pRaw =
+          ((timeSeconds / config.loopSeconds) + i / effectiveCount) % 1.0;
+      final p = math.pow(pRaw, depthSpeedPower).toDouble();
       final imageIndex = images.length == 1
           ? 0
           : (math.Random(i).nextInt(images.length));

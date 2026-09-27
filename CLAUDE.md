@@ -112,6 +112,7 @@ save it back (the slider only changes runtime state, not the source).
 | `_turnsMultiplier` | 2.76 | Turns | How many turns the spiral winds |
 | `_reachMultiplier` | 2.55 | Reach | How far out the spiral reaches |
 | `_innerRadiusMultiplier` | 1.72 | Inner R | Radius of the spiral's very first turn (where puffs spawn) — raise it so the first turn wraps around the logo instead of landing on top of it; the outer end of the radius curve is unaffected |
+| `_depthSpeedPower` | 1.0 | Depth Spd | Power curve on a puff's real-time pacing (see `CloudSpiralPainter.paint`'s `pRaw`→`p` remap) — above 1.0, puffs near the logo move slowly and accelerate outward (near/far parallax), with a bunching-near-the-tip side effect since puffs stay evenly staggered in raw time |
 | `_globalZoom` | 1.91 | Zoom | Overall zoom of spiral+logo together |
 | `_fillAmount` | 100.0 | Fill | % of the spiral populated with clouds (intro wipes 0→100) |
 | `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |
@@ -132,10 +133,15 @@ ignored, leaving the previous color in place):
   color, but each end additionally has its own live opacity slider
   (`_fgTopOpacity`/`_fgBottomOpacity`, 0–100%, default 0%/40%) — unlike
   the background, both hue *and* fade strength are tunable per end here.
+  A "FG Top Pos" slider (`_fgTopStop`, 0–95%, default 0%) additionally
+  moves the gradient's *top* stop position down toward the bottom — the
+  bottom stop always stays pinned at 1.0 (the very bottom of the
+  screen); raising it holds FG Top solid over more of the upper screen
+  before the blend into FG Bottom starts.
 
-All 6 values are included in "Share params" (`bgTop`/`bgBottom`/`fgTop`/
-`fgBottom` as hex strings, `fgTopOpacity`/`fgBottomOpacity` as numbers)
-alongside every slider.
+All 7 values are included in "Share params" (`bgTop`/`bgBottom`/`fgTop`/
+`fgBottom` as hex strings, `fgTopOpacity`/`fgBottomOpacity`/`fgTopStop`
+as numbers) alongside every slider.
 
 Intro (~1.5s): Fill 0→100%, Rotate 70°→0°, Zoom 1.0→baseline, speed decays
 from 7x, logo scales in with a slight tilt (35°→0°) — all eased with

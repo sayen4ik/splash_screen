@@ -93,6 +93,15 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   Color _fgBottomColor = const Color(0xFFE6BAFF);
   double _fgTopOpacity = 0.0;
   double _fgBottomOpacity = 40.0;
+
+  /// Where the foreground gradient's *top* stop sits, as a 0..1 fraction
+  /// of the screen from the top — the bottom stop always stays pinned at
+  /// the very bottom (1.0), only this one moves. Raising it slides the
+  /// whole top-to-bottom transition down toward the bottom, so the FG Top
+  /// color holds solid over more of the upper screen before the blend
+  /// into FG Bottom starts. 0.0 = old behavior (transition spans the
+  /// full screen top-to-bottom).
+  double _fgTopStop = 0.0;
   late final TextEditingController _bgTopHexController;
   late final TextEditingController _bgBottomHexController;
   late final TextEditingController _fgTopHexController;
@@ -165,6 +174,13 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// useful when the innermost turn is landing on top of the logo instead
   /// of wrapping around it. Shown in the UI as "Inner Radius".
   double _innerRadiusMultiplier = 1.72;
+
+  /// Live power curve on a puff's real-time pacing based on where it is
+  /// along its own life. 1.0 = uniform (old behavior). Above 1.0, puffs
+  /// near the logo move slowly and accelerate as they travel outward —
+  /// "closer/outer puffs move faster, ones near the logo move slower".
+  /// Shown in the UI as "Depth Speed".
+  double _depthSpeedPower = 1.0;
 
   /// Live overall zoom: scales the whole composition (spiral + logo)
   /// together around screen center, on top of every other knob above —
@@ -289,6 +305,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     'turns': _turnsMultiplier,
     'reach': _reachMultiplier,
     'innerRadius': _innerRadiusMultiplier,
+    'depthSpeed': _depthSpeedPower,
     'zoom': _globalZoom,
     'fill': _fillAmount,
     'rotate': _rotationDeg,
@@ -300,6 +317,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     'fgBottom': _colorToHex(_fgBottomColor),
     'fgTopOpacity': _fgTopOpacity,
     'fgBottomOpacity': _fgBottomOpacity,
+    'fgTopStop': _fgTopStop,
   };
 
   String _encodeConfig() =>
@@ -369,6 +387,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         if (asDouble('innerRadius') case final v?) {
           _innerRadiusMultiplier = v.clamp(0.5, 10.0);
         }
+        if (asDouble('depthSpeed') case final v?) {
+          _depthSpeedPower = v.clamp(0.3, 4.0);
+        }
         if (asDouble('zoom') case final v?) {
           _globalZoom = v.clamp(0.3, 5.0);
         }
@@ -405,6 +426,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         }
         if (asDouble('fgBottomOpacity') case final v?) {
           _fgBottomOpacity = v.clamp(0, 100);
+        }
+        if (asDouble('fgTopStop') case final v?) {
+          _fgTopStop = v.clamp(0.0, 0.95);
         }
         _configApplyError = null;
       });
@@ -632,6 +656,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                               turnsMultiplier: _turnsMultiplier,
                               reachMultiplier: _reachMultiplier,
                               innerRadiusMultiplier: _innerRadiusMultiplier,
+                              depthSpeedPower: _depthSpeedPower,
                               fillAmount: effectiveFill,
                               spawnOffset: Offset(
                                 _spawnOffsetX,
@@ -690,6 +715,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                     _fgTopColor.withValues(alpha: _fgTopOpacity / 100),
                     _fgBottomColor.withValues(alpha: _fgBottomOpacity / 100),
                   ],
+                  stops: [_fgTopStop, 1.0],
                 ),
               ),
             ),
@@ -814,6 +840,20 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           opacity: _fgTopOpacity,
                           onOpacityChanged: (v) =>
                               setState(() => _fgTopOpacity = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'FG Top Pos',
+                          value: _fgTopStop * 100,
+                          min: 0,
+                          max: 95,
+                          unit: '%',
+                          description:
+                              'Позиція верхньої точки градієнта форграунду '
+                              '(0% — верх екрана; більше — зсуває ближче '
+                              'до низу). Нижня точка завжди в самому низу',
+                          onChanged: (v) =>
+                              setState(() => _fgTopStop = v / 100),
                         ),
                         const SizedBox(height: 8),
                         _ColorPickerRow(
@@ -1001,6 +1041,18 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                               'нього',
                           onChanged: (v) =>
                               setState(() => _innerRadiusMultiplier = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Depth Spd',
+                          value: _depthSpeedPower,
+                          min: 0.3,
+                          max: 4.0,
+                          description:
+                              'Хмари ближче до центру рухаються повільніше, '
+                              'далі — швидше (1.0 — без ефекту)',
+                          onChanged: (v) =>
+                              setState(() => _depthSpeedPower = v),
                         ),
                         const SizedBox(height: 8),
                         _LabeledSlider(
