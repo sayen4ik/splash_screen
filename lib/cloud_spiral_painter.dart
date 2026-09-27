@@ -33,6 +33,7 @@ class CloudSpiralPainter extends CustomPainter {
     this.turnsMultiplier = 1.0,
     this.reachMultiplier = 1.0,
     this.fillAmount = 1.0,
+    this.spawnOffset = Offset.zero,
     int? particleCount,
   }) : assert(images.isNotEmpty, 'CloudSpiralPainter needs at least one image'),
        particleCount = particleCount ?? config.particleCount;
@@ -119,6 +120,17 @@ class CloudSpiralPainter extends CustomPainter {
   /// only reveals or hides a leading portion of it, like a wipe.
   final double fillAmount;
 
+  /// Pixel offset of the spiral's own center away from the canvas' center.
+  /// The logo (drawn separately, in `splash_screen.dart`) always stays
+  /// dead center — this only moves where the spiral winds out *from*, for
+  /// cases where it should spawn near the logo rather than exactly through
+  /// it. Positive x moves right, positive y moves down. Applied in the
+  /// same local coordinate space the painter already works in, *before*
+  /// the live zoom/rotation transform that wraps the spiral and the logo
+  /// as one rigid piece — so the offset scales/rotates along with
+  /// everything else instead of fighting it.
+  final Offset spawnOffset;
+
   // Reference "design" scale for everything that should look pixel-identical
   // no matter what the actual canvas size is: puff sizes and the spiral's
   // core shape near the logo. Only `reachStretch` below is allowed to depend
@@ -131,7 +143,7 @@ class CloudSpiralPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
+    final center = size.center(Offset.zero) + spawnOffset;
     final liveCornerReach =
         math.sqrt(size.width * size.width + size.height * size.height) / 2;
     // Only grows past 1 once the live canvas is actually bigger than the

@@ -10,7 +10,11 @@ tuned live with sliders before porting it.
 
 - `lib/splash_screen.dart` — **the actual splash screen.** State machine
   (`SplashState`: intro → looping → outro → done), every live-tunable
-  parameter (with its current tuned default), the debug slider panel, and
+  parameter (with its current tuned default), the debug slider panel
+  (each `_LabeledSlider` also carries a short Ukrainian `description`
+  shown under the row — the audience for this panel is a Ukrainian-
+  speaking designer, not just future-Claude reading the Dart comments;
+  keep new sliders' `description`s in Ukrainian too), and
   the entry point (`SplashDemoScreen`). The demo screen's layout is a `Row`:
   left side is the splash itself rendered inside a fixed phone-sized frame
   (`_phoneWidth`/`_phoneHeight`, 390×844 — iPhone 13/14/15 logical points,
@@ -28,6 +32,16 @@ tuned live with sliders before porting it.
   `_customLogoBytes`/`_customCloudImages`), never written to `assets/` or
   `pubspec.yaml` — swapping in a new *permanent* default still means adding
   the file and updating `_cloudAssetPaths`/`assets/logo.png` as before.
+  Below the sliders is a "Share params" box (`_configController`): a JSON
+  dump of every slider value (`_paramsMap`/`_encodeConfig`) — deliberately
+  *not* the uploaded images, since those aren't meant to travel through a
+  pasted chat message. "Copy current" fills the box and the clipboard;
+  "Apply" (`_applyConfig`) parses whatever's in the box and pushes each
+  recognized field onto its slider, clamped into that slider's own min/max
+  (a `Slider` throws if handed an out-of-range value, and there's no
+  guarantee a pasted-in value already fits) — unrecognized keys are
+  ignored and a bad/non-JSON paste shows an inline error instead of
+  crashing.
 - `lib/cloud_spiral_painter.dart` — `CustomPainter` that draws the cloud
   stream: one continuous logarithmic spiral of cloud sprites anchored at the
   logo's tip, not a set of concentric rings. Read the doc comments at the
@@ -100,6 +114,8 @@ save it back (the slider only changes runtime state, not the source).
 | `_globalZoom` | 1.91 | Zoom | Overall zoom of spiral+logo together |
 | `_fillAmount` | 100.0 | Fill | % of the spiral populated with clouds (intro wipes 0→100) |
 | `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |
+| `_spawnOffsetX` | 0.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
+| `_spawnOffsetY` | 0.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
 
 There's also a fixed (non-live) cosmetic tint drawn over the whole splash,
 bottom to top: `#E6BAFF` at 40% opacity at the bottom fading to `#E6BAFF`

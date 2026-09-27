@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -5,7 +6,7 @@ import 'dart:ui' as ui;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
 
 import 'cloud_spiral_config.dart';
 import 'cloud_spiral_painter.dart';
@@ -71,6 +72,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   Uint8List? _customLogoBytes;
   final List<Uint8List?> _customCloudBytes = List<Uint8List?>.filled(3, null);
   final List<ui.Image?> _customCloudImages = List<ui.Image?>.filled(3, null);
+
+  // "Share params" box at the bottom of the panel: a plain-text (JSON)
+  // dump of every slider value (never the uploaded images — those aren't
+  // meant to travel through a chat message). One person hits "Copy", pastes
+  // the text to someone else, who pastes it in here and hits "Apply" to
+  // pull those exact slider positions onto their own screen.
+  late final TextEditingController _configController;
+  String? _configApplyError;
 
   late final Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
@@ -152,6 +161,16 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// spins everything, logo included.
   double _rotationDeg = 0.0;
 
+  /// Pixel offset (from the phone-frame canvas' own center) of where the
+  /// spiral's spawn point sits — the logo itself always stays dead center;
+  /// only the spiral's own center moves, so this is for cases where the
+  /// spiral should wind out from a point near the logo rather than exactly
+  /// through it. Applied *before* the zoom/rotation transform above, so it
+  /// scales/rotates along with everything else rather than fighting it.
+  /// Shown in the UI as "Spawn X"/"Spawn Y".
+  double _spawnOffsetX = 0.0;
+  double _spawnOffsetY = 0.0;
+
   /// Cloud sprite variants to pick from — add more paths here (and to
   /// pubspec.yaml's assets list) to have particles randomly (but stably,
   /// see [CloudSpiralPainter]) mix between several cloud shapes instead of
@@ -167,12 +186,117 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     super.initState();
     _loadImages();
     _ticker = createTicker(_onTick)..start();
+    _configController = TextEditingController(text: _encodeConfig());
   }
 
   @override
   void dispose() {
     _ticker.dispose();
+    _configController.dispose();
     super.dispose();
+  }
+
+  /// Every slider's current value, keyed by the same short names the
+  /// "Apply" side reads back — deliberately excludes the uploaded logo/
+  /// cloud images (those don't belong in a pasted chat message).
+  Map<String, num> _paramsMap() => {
+    'speed': _speedMultiplier,
+    'scaleOut': _sizeMultiplier,
+    'scaleIn': _startSizeMultiplier,
+    'scaleMid': _sizeMidpoint,
+    'count': _particleCount.round(),
+    'spacing': _particleSpacing,
+    'squash': _squashFactor,
+    'tilt': _tiltAngleDeg,
+    'turns': _turnsMultiplier,
+    'reach': _reachMultiplier,
+    'zoom': _globalZoom,
+    'fill': _fillAmount,
+    'rotate': _rotationDeg,
+    'spawnX': _spawnOffsetX,
+    'spawnY': _spawnOffsetY,
+  };
+
+  String _encodeConfig() =>
+      const JsonEncoder.withIndent('  ').convert(_paramsMap());
+
+  void _copyConfig() {
+    final text = _encodeConfig();
+    setState(() {
+      _configController.text = text;
+      _configApplyError = null;
+    });
+    Clipboard.setData(ClipboardData(text: text));
+  }
+
+  /// Parses whatever's currently typed/pasted into the config box and
+  /// pushes each recognized field onto its slider, clamped into that
+  /// slider's own min/max — a `Slider` throws if handed a value outside
+  /// its range, and a value from someone else's session (or a hand-typed
+  /// one) is never guaranteed to already fit. Unrecognized keys are
+  /// ignored; a value that isn't a number for a known key is skipped
+  /// rather than failing the whole import.
+  void _applyConfig() {
+    try {
+      final decoded = jsonDecode(_configController.text);
+      if (decoded is! Map) {
+        throw const FormatException('Expected a JSON object');
+      }
+      double? asDouble(String key) => switch (decoded[key]) {
+        final num n => n.toDouble(),
+        _ => null,
+      };
+      setState(() {
+        if (asDouble('speed') case final v?) {
+          _speedMultiplier = v.clamp(0.01, 0.1);
+        }
+        if (asDouble('scaleOut') case final v?) {
+          _sizeMultiplier = v.clamp(0.3, 6.0);
+        }
+        if (asDouble('scaleIn') case final v?) {
+          _startSizeMultiplier = v.clamp(0.1, 4.0);
+        }
+        if (asDouble('scaleMid') case final v?) {
+          _sizeMidpoint = v.clamp(0.05, 0.95);
+        }
+        if (asDouble('count') case final v?) {
+          _particleCount = v.clamp(10, 200);
+        }
+        if (asDouble('spacing') case final v?) {
+          _particleSpacing = v.clamp(0.3, 3.0);
+        }
+        if (asDouble('squash') case final v?) {
+          _squashFactor = v.clamp(0.3, 1.0);
+        }
+        if (asDouble('tilt') case final v?) {
+          _tiltAngleDeg = v.clamp(-60, 60);
+        }
+        if (asDouble('turns') case final v?) {
+          _turnsMultiplier = v.clamp(0.5, 6.0);
+        }
+        if (asDouble('reach') case final v?) {
+          _reachMultiplier = v.clamp(0.5, 6.0);
+        }
+        if (asDouble('zoom') case final v?) {
+          _globalZoom = v.clamp(0.3, 5.0);
+        }
+        if (asDouble('fill') case final v?) {
+          _fillAmount = v.clamp(0, 100);
+        }
+        if (asDouble('rotate') case final v?) {
+          _rotationDeg = v.clamp(-180, 180);
+        }
+        if (asDouble('spawnX') case final v?) {
+          _spawnOffsetX = v.clamp(-200, 200);
+        }
+        if (asDouble('spawnY') case final v?) {
+          _spawnOffsetY = v.clamp(-200, 200);
+        }
+        _configApplyError = null;
+      });
+    } catch (_) {
+      setState(() => _configApplyError = 'Couldn\'t read that — check it\'s valid JSON.');
+    }
   }
 
   Future<void> _loadImages() async {
@@ -400,6 +524,10 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                               turnsMultiplier: _turnsMultiplier,
                               reachMultiplier: _reachMultiplier,
                               fillAmount: effectiveFill,
+                              spawnOffset: Offset(
+                                _spawnOffsetX,
+                                _spawnOffsetY,
+                              ),
                               particleCount: _particleCount.round(),
                             ),
                             size: Size.infinite,
@@ -588,6 +716,8 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           value: _speedMultiplier,
                           min: 0.01,
                           max: 0.1,
+                          description:
+                              'Швидкість руху хмар по спіралі в стані LOOPING',
                           onChanged: (v) =>
                               setState(() => _speedMultiplier = v),
                         ),
@@ -597,6 +727,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           value: _sizeMultiplier,
                           min: 0.3,
                           max: 6.0,
+                          description:
+                              'Розмір хмаринок на зовнішньому краю спіралі '
+                              '(найдальші від лого)',
                           onChanged: (v) =>
                               setState(() => _sizeMultiplier = v),
                         ),
@@ -606,6 +739,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           value: _startSizeMultiplier,
                           min: 0.1,
                           max: 4.0,
+                          description:
+                              'Розмір хмаринок біля кінчика логотипу '
+                              '(точка появи)',
                           onChanged: (v) =>
                               setState(() => _startSizeMultiplier = v),
                         ),
@@ -615,6 +751,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           value: _sizeMidpoint,
                           min: 0.05,
                           max: 0.95,
+                          description:
+                              'Точка (0–1) шляху, де хмаринка має рівно '
+                              'середній розмір між Scale In і Scale Out',
                           onChanged: (v) =>
                               setState(() => _sizeMidpoint = v),
                         ),
@@ -625,6 +764,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           min: 10,
                           max: 200,
                           unit: '',
+                          description: 'Базова кількість хмаринок у спіралі',
                           onChanged: (v) =>
                               setState(() => _particleCount = v),
                         ),
@@ -634,6 +774,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           value: _particleSpacing,
                           min: 0.3,
                           max: 3.0,
+                          description:
+                              'Відстань між сусідніми хмаринками вздовж '
+                              'спіралі (більше — рідше)',
                           onChanged: (v) =>
                               setState(() => _particleSpacing = v),
                         ),
@@ -643,6 +786,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           value: _squashFactor,
                           min: 0.3,
                           max: 1.0,
+                          description:
+                              'Стиснення еліпса спіралі (1.0 — коло, менше '
+                              '— сплощений овал)',
                           onChanged: (v) =>
                               setState(() => _squashFactor = v),
                         ),
@@ -653,6 +799,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           min: -60,
                           max: 60,
                           unit: '°',
+                          description: 'Кут нахилу осі стиснення (Squash)',
                           onChanged: (v) =>
                               setState(() => _tiltAngleDeg = v),
                         ),
@@ -662,6 +809,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           value: _turnsMultiplier,
                           min: 0.5,
                           max: 6.0,
+                          description: 'Кількість витків спіралі',
                           onChanged: (v) =>
                               setState(() => _turnsMultiplier = v),
                         ),
@@ -671,6 +819,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           value: _reachMultiplier,
                           min: 0.5,
                           max: 6.0,
+                          description:
+                              'Наскільки далеко спіраль тягнеться від '
+                              'центру до краю екрана',
                           onChanged: (v) =>
                               setState(() => _reachMultiplier = v),
                         ),
@@ -680,6 +831,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           value: _globalZoom,
                           min: 0.3,
                           max: 5.0,
+                          description:
+                              'Загальний масштаб усієї композиції '
+                              '(спіраль + лого разом)',
                           onChanged: (v) => setState(() => _globalZoom = v),
                         ),
                         const SizedBox(height: 8),
@@ -689,6 +843,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           min: 0,
                           max: 100,
                           unit: '%',
+                          description:
+                              'Який % спіралі заповнений хмарами від лого '
+                              'назовні (Intro: 0→100%)',
                           onChanged: (v) => setState(() => _fillAmount = v),
                         ),
                         const SizedBox(height: 8),
@@ -698,7 +855,97 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           min: -180,
                           max: 180,
                           unit: '°',
+                          description:
+                              'Загальний поворот композиції '
+                              '(спіраль + лого разом)',
                           onChanged: (v) => setState(() => _rotationDeg = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Spawn X',
+                          value: _spawnOffsetX,
+                          min: -200,
+                          max: 200,
+                          unit: 'px',
+                          description:
+                              'Зсув точки спавну хмар по горизонталі '
+                              '(логотип не рухається)',
+                          onChanged: (v) =>
+                              setState(() => _spawnOffsetX = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Spawn Y',
+                          value: _spawnOffsetY,
+                          min: -200,
+                          max: 200,
+                          unit: 'px',
+                          description:
+                              'Зсув точки спавну хмар по вертикалі '
+                              '(логотип не рухається)',
+                          onChanged: (v) =>
+                              setState(() => _spawnOffsetY = v),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Share params',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Copy this and send it to someone else, or paste '
+                          'theirs in and hit Apply to match their sliders.',
+                          style: TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _configController,
+                          maxLines: 6,
+                          minLines: 4,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                          ),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.black.withValues(alpha: 0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Colors.white24,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.all(10),
+                          ),
+                        ),
+                        if (_configApplyError != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            _configApplyError!,
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            OutlinedButton(
+                              onPressed: _copyConfig,
+                              child: const Text('Copy current'),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: _applyConfig,
+                              child: const Text('Apply'),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -829,6 +1076,7 @@ class _LabeledSlider extends StatelessWidget {
     required this.max,
     required this.onChanged,
     this.unit = 'x',
+    this.description,
   });
 
   final String label;
@@ -838,7 +1086,13 @@ class _LabeledSlider extends StatelessWidget {
   final ValueChanged<double> onChanged;
   final String unit;
 
-  bool get _isWholeNumberUnit => unit == '°' || unit == '%' || unit.isEmpty;
+  /// Short Ukrainian one-liner explaining what this slider changes, shown
+  /// under the row — a plain-language hint for anyone tuning the splash
+  /// who isn't reading the Dart source's own doc comments.
+  final String? description;
+
+  bool get _isWholeNumberUnit =>
+      unit == '°' || unit == '%' || unit == 'px' || unit.isEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -849,43 +1103,58 @@ class _LabeledSlider extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white24),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 64,
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 2,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+          Row(
+            children: [
+              SizedBox(
+                width: 64,
+                child: Text(
+                  label,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
               ),
-              child: Slider(
-                value: value,
-                min: min,
-                max: max,
-                divisions: _isWholeNumberUnit
-                    ? (max - min).round().clamp(1, 100000)
-                    : ((max - min) * 100).round().clamp(200, 100000),
-                onChanged: onChanged,
+              Expanded(
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 2,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 7,
+                    ),
+                  ),
+                  child: Slider(
+                    value: value,
+                    min: min,
+                    max: max,
+                    divisions: _isWholeNumberUnit
+                        ? (max - min).round().clamp(1, 100000)
+                        : ((max - min) * 100).round().clamp(200, 100000),
+                    onChanged: onChanged,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 44,
+                child: Text(
+                  '${value.toStringAsFixed(_isWholeNumberUnit ? 0 : 2)}$unit',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (description != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 4),
+              child: Text(
+                description!,
+                style: const TextStyle(color: Colors.white38, fontSize: 10),
               ),
             ),
-          ),
-          SizedBox(
-            width: 44,
-            child: Text(
-              '${value.toStringAsFixed(_isWholeNumberUnit ? 0 : 2)}$unit',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
         ],
       ),
     );
