@@ -88,11 +88,11 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   // of the old fixed 0%/40% fade — so both the hue *and* how strong the
   // fade is at each end are tunable.
   Color _bgTopColor = const Color(0xFF07020D);
-  Color _bgBottomColor = const Color(0xFFC9C3D9);
+  Color _bgBottomColor = const Color(0xFF22065A);
   Color _fgTopColor = const Color(0xFFE6BAFF);
   Color _fgBottomColor = const Color(0xFFE6BAFF);
   double _fgTopOpacity = 0.0;
-  double _fgBottomOpacity = 40.0;
+  double _fgBottomOpacity = 55.0;
 
   /// Where the foreground gradient's *top* stop sits, as a 0..1 fraction
   /// of the screen from the top — the bottom stop always stays pinned at
@@ -101,7 +101,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// color holds solid over more of the upper screen before the blend
   /// into FG Bottom starts. 0.0 = old behavior (transition spans the
   /// full screen top-to-bottom).
-  double _fgTopStop = 0.0;
+  double _fgTopStop = 0.26;
   late final TextEditingController _bgTopHexController;
   late final TextEditingController _bgBottomHexController;
   late final TextEditingController _fgTopHexController;
@@ -148,11 +148,11 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
   /// Base number of puffs `_particleSpacing` scales the density from
   /// (overrides [CloudSpiralConfig.particleCount] live).
-  double _particleCount = 86;
+  double _particleCount = 40;
 
   /// Live knob for how far apart consecutive puffs sit along the spiral
   /// (1.0 = evenly fills the whole loop, as before).
-  double _particleSpacing = 0.91;
+  double _particleSpacing = 0.5;
 
   /// Live ellipse-squash knob (1.0 = perfect circle, less = flatter oval),
   /// for the tilted-tunnel "distort" look.
@@ -173,14 +173,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// r(p) curve's outer end is unaffected — see [CloudSpiralPainter]),
   /// useful when the innermost turn is landing on top of the logo instead
   /// of wrapping around it. Shown in the UI as "Inner Radius".
-  double _innerRadiusMultiplier = 1.72;
+  double _innerRadiusMultiplier = 1.95;
 
   /// Live power curve on a puff's real-time pacing based on where it is
   /// along its own life. 1.0 = uniform (old behavior). Above 1.0, puffs
   /// near the logo move slowly and accelerate as they travel outward —
   /// "closer/outer puffs move faster, ones near the logo move slower".
   /// Shown in the UI as "Depth Speed".
-  double _depthSpeedPower = 1.0;
+  double _depthSpeedPower = 1.5;
 
   /// Live overall zoom: scales the whole composition (spiral + logo)
   /// together around screen center, on top of every other knob above —
@@ -208,8 +208,8 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// through it. Applied *before* the zoom/rotation transform above, so it
   /// scales/rotates along with everything else rather than fighting it.
   /// Shown in the UI as "Spawn X"/"Spawn Y".
-  double _spawnOffsetX = 1.0;
-  double _spawnOffsetY = 10.0;
+  double _spawnOffsetX = 2.0;
+  double _spawnOffsetY = 7.0;
 
   /// Cloud sprite variants to pick from — add more paths here (and to
   /// pubspec.yaml's assets list) to have particles randomly (but stably,

@@ -105,35 +105,35 @@ save it back (the slider only changes runtime state, not the source).
 | `_sizeMultiplier` | 1.41 | Scale Out | Cloud size at the outer edge |
 | `_startSizeMultiplier` | 0.19 | Scale In | Cloud size at the logo tip (spawn) |
 | `_sizeMidpoint` | 0.5 | Scale Mid | Where (0..1 along `p`) a puff is exactly halfway between Scale In and Scale Out in size — 0.5 is the old plain-linear growth; push toward 0/1 to shift when the size-up happens |
-| `_particleCount` | 86 | Count | Base puff count |
-| `_particleSpacing` | 0.91 | Spacing | Density (higher = sparser) |
+| `_particleCount` | 40 | Count | Base puff count |
+| `_particleSpacing` | 0.5 | Spacing | Density (higher = sparser) |
 | `_squashFactor` | 0.7235 | Squash | Ellipse squash of the spiral |
 | `_tiltAngleDeg` | -39.0 | Tilt | Tilt axis of the squash |
 | `_turnsMultiplier` | 2.76 | Turns | How many turns the spiral winds |
 | `_reachMultiplier` | 2.55 | Reach | How far out the spiral reaches |
-| `_innerRadiusMultiplier` | 1.72 | Inner R | Radius of the spiral's very first turn (where puffs spawn) — raise it so the first turn wraps around the logo instead of landing on top of it; the outer end of the radius curve is unaffected |
-| `_depthSpeedPower` | 1.0 | Depth Spd | Power curve on a puff's real-time pacing (see `CloudSpiralPainter.paint`'s `pRaw`→`p` remap) — above 1.0, puffs near the logo move slowly and accelerate outward (near/far parallax), with a bunching-near-the-tip side effect since puffs stay evenly staggered in raw time |
+| `_innerRadiusMultiplier` | 1.95 | Inner R | Radius of the spiral's very first turn (where puffs spawn) — raise it so the first turn wraps around the logo instead of landing on top of it; the outer end of the radius curve is unaffected |
+| `_depthSpeedPower` | 1.5 | Depth Spd | Power curve on a puff's real-time pacing (see `CloudSpiralPainter.paint`'s `pRaw`→`p` remap) — above 1.0, puffs near the logo move slowly and accelerate outward (near/far parallax), with a bunching-near-the-tip side effect since puffs stay evenly staggered in raw time |
 | `_globalZoom` | 1.91 | Zoom | Overall zoom of spiral+logo together |
 | `_fillAmount` | 100.0 | Fill | % of the spiral populated with clouds (intro wipes 0→100) |
 | `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |
-| `_spawnOffsetX` | 1.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
-| `_spawnOffsetY` | 10.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
+| `_spawnOffsetX` | 2.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
+| `_spawnOffsetY` | 7.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
 
 The "Colors" section at the top of the right panel has 4 hex color rows
 (`RRGGBB`, no `#`, each next to a live swatch — an invalid hex is just
 ignored, leaving the previous color in place):
 
 - **BG Top** / **BG Bottom** (`_bgTopColor`/`_bgBottomColor`, default
-  `#07020D`/`#C9C3D9`) — a plain 2-stop `LinearGradient` behind
+  `#07020D`/`#22065A`) — a plain 2-stop `LinearGradient` behind
   everything, always fully opaque (no opacity knob — it's the solid base
   of the whole scene).
 - **FG Top** / **FG Bottom** (`_fgTopColor`/`_fgBottomColor`, default
   `#E6BAFF`/`#E6BAFF`) — the cosmetic tint drawn *over* the whole scene
   (above clouds/logo, below the debug UI), also top color → bottom
   color, but each end additionally has its own live opacity slider
-  (`_fgTopOpacity`/`_fgBottomOpacity`, 0–100%, default 0%/40%) — unlike
+  (`_fgTopOpacity`/`_fgBottomOpacity`, 0–100%, default 0%/55%) — unlike
   the background, both hue *and* fade strength are tunable per end here.
-  A "FG Top Pos" slider (`_fgTopStop`, 0–95%, default 0%) additionally
+  A "FG Top Pos" slider (`_fgTopStop`, 0–95%, default 26%) additionally
   moves the gradient's *top* stop position down toward the bottom — the
   bottom stop always stays pinned at 1.0 (the very bottom of the
   screen); raising it holds FG Top solid over more of the upper screen
