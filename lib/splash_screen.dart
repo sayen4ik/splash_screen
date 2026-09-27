@@ -81,6 +81,17 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   late final TextEditingController _configController;
   String? _configApplyError;
 
+  // Background: drives the whole base gradient (see `build()`) — the
+  // gradient's other 3 stops are just darker lerps toward black of this
+  // one color, so one knob reshapes the whole thing while keeping the
+  // dark-to-light gradient look. Foreground: the color of the bottom-to-
+  // top tint overlay drawn on top of the scene (alpha still fades
+  // 40%→0% bottom-to-top; only the hue is live here).
+  Color _backgroundColor = const Color(0xFFC9C3D9);
+  Color _foregroundColor = const Color(0xFFE6BAFF);
+  late final TextEditingController _backgroundHexController;
+  late final TextEditingController _foregroundHexController;
+
   late final Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
 
@@ -98,19 +109,19 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// Scales how fast `_spiralTimeSec` advances, so dragging it changes how
   /// quickly clouds travel from the logo tip to the edge without touching
   /// [CloudSpiralConfig.loopSeconds] itself.
-  double _speedMultiplier = 0.04;
+  double _speedMultiplier = 0.0303;
 
   /// Live size knob for the *outer* (far/near-camera) clouds — the ones
   /// that have traveled furthest from the logo tip, i.e. how big puffs get
   /// once they've scaled all the way out. Shown in the UI as "Scale Out".
-  double _sizeMultiplier = 1.82;
+  double _sizeMultiplier = 1.41;
 
   /// Live size knob for the clouds right at the logo tip (spawn size), i.e.
   /// how big puffs are the moment they scale in from the logo. Shown in the
   /// UI as "Scale In". Together with `_sizeMultiplier` ("Scale Out") this
   /// sets how much clouds grow over their trip out — a bigger gap between
   /// the two reads as puffs visibly ballooning outward as they travel.
-  double _startSizeMultiplier = 1.02;
+  double _startSizeMultiplier = 0.19;
 
   /// Where (0..1, along life-progress `p`) a puff sits exactly halfway
   /// between Scale In and Scale Out in size. 0.5 = old plain-linear growth.
@@ -126,17 +137,17 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
   /// Live knob for how far apart consecutive puffs sit along the spiral
   /// (1.0 = evenly fills the whole loop, as before).
-  double _particleSpacing = 1.11;
+  double _particleSpacing = 0.91;
 
   /// Live ellipse-squash knob (1.0 = perfect circle, less = flatter oval),
   /// for the tilted-tunnel "distort" look.
-  double _squashFactor = 0.70;
+  double _squashFactor = 0.7235;
 
   /// Live tilt angle (degrees) of the squash axis.
-  double _tiltAngleDeg = -40.0;
+  double _tiltAngleDeg = -39.0;
 
   /// Live multiplier on the spiral's turn count.
-  double _turnsMultiplier = 1.81;
+  double _turnsMultiplier = 2.76;
 
   /// Live multiplier on how far out the spiral reaches (1.0 = the canvas'
   /// own corner distance, so it fills a tall portrait screen edge to edge).
@@ -147,7 +158,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// r(p) curve's outer end is unaffected — see [CloudSpiralPainter]),
   /// useful when the innermost turn is landing on top of the logo instead
   /// of wrapping around it. Shown in the UI as "Inner Radius".
-  double _innerRadiusMultiplier = 1.0;
+  double _innerRadiusMultiplier = 1.72;
 
   /// Live overall zoom: scales the whole composition (spiral + logo)
   /// together around screen center, on top of every other knob above —
@@ -175,8 +186,8 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// through it. Applied *before* the zoom/rotation transform above, so it
   /// scales/rotates along with everything else rather than fighting it.
   /// Shown in the UI as "Spawn X"/"Spawn Y".
-  double _spawnOffsetX = 0.0;
-  double _spawnOffsetY = 0.0;
+  double _spawnOffsetX = 1.0;
+  double _spawnOffsetY = 10.0;
 
   /// Cloud sprite variants to pick from — add more paths here (and to
   /// pubspec.yaml's assets list) to have particles randomly (but stably,
@@ -194,19 +205,53 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     _loadImages();
     _ticker = createTicker(_onTick)..start();
     _configController = TextEditingController(text: _encodeConfig());
+    _backgroundHexController = TextEditingController(
+      text: _colorToHex(_backgroundColor),
+    );
+    _foregroundHexController = TextEditingController(
+      text: _colorToHex(_foregroundColor),
+    );
   }
 
   @override
   void dispose() {
     _ticker.dispose();
     _configController.dispose();
+    _backgroundHexController.dispose();
+    _foregroundHexController.dispose();
     super.dispose();
+  }
+
+  /// Parses a 6-digit hex string (with or without a leading `#`) into an
+  /// opaque [Color]; `null` if it isn't one, so callers can leave a bad
+  /// hex box untouched instead of crashing on it.
+  static Color? _parseHex(String input) {
+    final cleaned = input.trim().replaceFirst('#', '');
+    if (cleaned.length != 6) return null;
+    final value = int.tryParse(cleaned, radix: 16);
+    if (value == null) return null;
+    return Color(0xFF000000 | value);
+  }
+
+  static String _colorToHex(Color c) =>
+      (c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase();
+
+  void _applyBackgroundHex() {
+    final parsed = _parseHex(_backgroundHexController.text);
+    if (parsed == null) return;
+    setState(() => _backgroundColor = parsed);
+  }
+
+  void _applyForegroundHex() {
+    final parsed = _parseHex(_foregroundHexController.text);
+    if (parsed == null) return;
+    setState(() => _foregroundColor = parsed);
   }
 
   /// Every slider's current value, keyed by the same short names the
   /// "Apply" side reads back — deliberately excludes the uploaded logo/
   /// cloud images (those don't belong in a pasted chat message).
-  Map<String, num> _paramsMap() => {
+  Map<String, Object> _paramsMap() => {
     'speed': _speedMultiplier,
     'scaleOut': _sizeMultiplier,
     'scaleIn': _startSizeMultiplier,
@@ -223,6 +268,8 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     'rotate': _rotationDeg,
     'spawnX': _spawnOffsetX,
     'spawnY': _spawnOffsetY,
+    'background': _colorToHex(_backgroundColor),
+    'foreground': _colorToHex(_foregroundColor),
   };
 
   String _encodeConfig() =>
@@ -252,6 +299,10 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
       }
       double? asDouble(String key) => switch (decoded[key]) {
         final num n => n.toDouble(),
+        _ => null,
+      };
+      Color? asColor(String key) => switch (decoded[key]) {
+        final String s => _parseHex(s),
         _ => null,
       };
       setState(() {
@@ -302,6 +353,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         }
         if (asDouble('spawnY') case final v?) {
           _spawnOffsetY = v.clamp(-200, 200);
+        }
+        if (asColor('background') case final c?) {
+          _backgroundColor = c;
+          _backgroundHexController.text = _colorToHex(c);
+        }
+        if (asColor('foreground') case final c?) {
+          _foregroundColor = c;
+          _foregroundHexController.text = _colorToHex(c);
         }
         _configApplyError = null;
       });
@@ -480,18 +539,18 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
           Stack(
             fit: StackFit.expand,
             children: [
-              const DecoratedBox(
+              DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Color(0xFF07020D),
-                        Color(0xFF251A43),
-                        Color(0xFF7059AE),
-                        Color(0xFFC9C3D9),
+                        Color.lerp(Colors.black, _backgroundColor, 0.03)!,
+                        Color.lerp(Colors.black, _backgroundColor, 0.28)!,
+                        Color.lerp(Colors.black, _backgroundColor, 0.68)!,
+                        _backgroundColor,
                       ],
-                      stops: [0.0, 0.45, 0.78, 1.0],
+                      stops: const [0.0, 0.45, 0.78, 1.0],
                     ),
                   ),
                 ),
@@ -583,15 +642,15 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
           // fading to fully transparent at the top. Sits above the scene
           // (clouds/logo), as part of the phone-frame content itself — not
           // debug UI, so it stays inside `splashContent`.
-          const IgnorePointer(
+          IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Color(0x66E6BAFF), // #E6BAFF @ 40% opacity
-                    Color(0x00E6BAFF), // #E6BAFF @ 0% opacity
+                    _foregroundColor.withValues(alpha: 0.4),
+                    _foregroundColor.withValues(alpha: 0.0),
                   ],
                 ),
               ),
@@ -677,6 +736,35 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
+                        const Text(
+                          'Colors',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _ColorPickerRow(
+                          label: 'Background',
+                          description:
+                              'Базовий градієнт сцени (низ — цей колір, '
+                              'решта — темніші відтінки до чорного)',
+                          color: _backgroundColor,
+                          controller: _backgroundHexController,
+                          onSubmitted: _applyBackgroundHex,
+                        ),
+                        const SizedBox(height: 8),
+                        _ColorPickerRow(
+                          label: 'Foreground',
+                          description:
+                              'Колір тонування зверху сцени (прозорість '
+                              'все ще йде 40%→0% знизу вгору)',
+                          color: _foregroundColor,
+                          controller: _foregroundHexController,
+                          onSubmitted: _applyForegroundHex,
+                        ),
+                        const SizedBox(height: 20),
                         const Text(
                           'Assets',
                           style: TextStyle(
@@ -1032,6 +1120,101 @@ class _StateBadge extends StatelessWidget {
 /// default, or an uploaded replacement), a label, an upload button, and —
 /// only once something's been uploaded — a reset button to go back to the
 /// bundled default.
+/// One row in the "Colors" section: a live swatch of the current color, a
+/// hex text box to type/paste a new one into, and a short Ukrainian
+/// description of what this color drives. Submitting the hex box (Enter,
+/// or tapping away) calls [onSubmitted], which is expected to parse it and
+/// update the color — an invalid hex is simply ignored, leaving the last
+/// good color in place rather than crashing.
+class _ColorPickerRow extends StatelessWidget {
+  const _ColorPickerRow({
+    required this.label,
+    required this.description,
+    required this.color,
+    required this.controller,
+    required this.onSubmitted,
+  });
+
+  final String label;
+  final String description;
+  final Color color;
+  final TextEditingController controller;
+  final VoidCallback onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.white24),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 76,
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  onSubmitted: (_) => onSubmitted(),
+                  onTapOutside: (_) => onSubmitted(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    prefixText: '#',
+                    prefixStyle: TextStyle(
+                      color: Colors.white38,
+                      fontSize: 12,
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, top: 4),
+            child: Text(
+              description,
+              style: const TextStyle(color: Colors.white38, fontSize: 10),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _AssetPickerRow extends StatelessWidget {
   const _AssetPickerRow({
     required this.label,

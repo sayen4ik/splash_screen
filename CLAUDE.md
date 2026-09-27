@@ -101,28 +101,38 @@ save it back (the slider only changes runtime state, not the source).
 
 | Field | Value | UI label | What it does |
 |---|---|---|---|
-| `_speedMultiplier` | 0.04 | Speed | Loop flow speed |
-| `_sizeMultiplier` | 1.82 | Scale Out | Cloud size at the outer edge |
-| `_startSizeMultiplier` | 1.02 | Scale In | Cloud size at the logo tip (spawn) |
+| `_speedMultiplier` | 0.0303 | Speed | Loop flow speed |
+| `_sizeMultiplier` | 1.41 | Scale Out | Cloud size at the outer edge |
+| `_startSizeMultiplier` | 0.19 | Scale In | Cloud size at the logo tip (spawn) |
 | `_sizeMidpoint` | 0.5 | Scale Mid | Where (0..1 along `p`) a puff is exactly halfway between Scale In and Scale Out in size — 0.5 is the old plain-linear growth; push toward 0/1 to shift when the size-up happens |
 | `_particleCount` | 86 | Count | Base puff count |
-| `_particleSpacing` | 1.11 | Spacing | Density (higher = sparser) |
-| `_squashFactor` | 0.70 | Squash | Ellipse squash of the spiral |
-| `_tiltAngleDeg` | -40.0 | Tilt | Tilt axis of the squash |
-| `_turnsMultiplier` | 1.81 | Turns | How many turns the spiral winds |
+| `_particleSpacing` | 0.91 | Spacing | Density (higher = sparser) |
+| `_squashFactor` | 0.7235 | Squash | Ellipse squash of the spiral |
+| `_tiltAngleDeg` | -39.0 | Tilt | Tilt axis of the squash |
+| `_turnsMultiplier` | 2.76 | Turns | How many turns the spiral winds |
 | `_reachMultiplier` | 2.55 | Reach | How far out the spiral reaches |
-| `_innerRadiusMultiplier` | 1.0 | Inner R | Radius of the spiral's very first turn (where puffs spawn) — raise it so the first turn wraps around the logo instead of landing on top of it; the outer end of the radius curve is unaffected |
+| `_innerRadiusMultiplier` | 1.72 | Inner R | Radius of the spiral's very first turn (where puffs spawn) — raise it so the first turn wraps around the logo instead of landing on top of it; the outer end of the radius curve is unaffected |
 | `_globalZoom` | 1.91 | Zoom | Overall zoom of spiral+logo together |
 | `_fillAmount` | 100.0 | Fill | % of the spiral populated with clouds (intro wipes 0→100) |
 | `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |
-| `_spawnOffsetX` | 0.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
-| `_spawnOffsetY` | 0.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
+| `_spawnOffsetX` | 1.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
+| `_spawnOffsetY` | 10.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
 
-There's also a fixed (non-live) cosmetic tint drawn over the whole splash,
-bottom to top: `#E6BAFF` at 40% opacity at the bottom fading to `#E6BAFF`
-at 0% (fully transparent) at the top. It sits above the clouds/logo scene
-but below the debug slider UI, and isn't affected by any of the sliders
-above.
+There's also a cosmetic tint drawn over the whole splash, bottom to top:
+the "Foreground" color at 40% opacity at the bottom fading to 0% (fully
+transparent) at the top — the hue is live (`_foregroundColor`, default
+`#E6BAFF`), the alpha fade itself is not. It sits above the clouds/logo
+scene but below the debug slider UI.
+
+"Background" (`_backgroundColor`, default `#C9C3D9`) drives the base
+gradient behind everything: the other 3 stops are just `Color.lerp` steps
+from black toward this one color (see `build()`), so one hex value
+reshapes the whole dark-to-light gradient without needing 4 separate
+color pickers. Both colors live in the "Colors" section at the top of the
+right panel, each a hex text box (`RRGGBB`, no `#`) next to a live
+swatch — an invalid hex is just ignored, leaving the previous color in
+place. Both are included in "Share params" (`background`/`foreground`,
+as hex strings) alongside every slider.
 
 Intro (~1.5s): Fill 0→100%, Rotate 70°→0°, Zoom 1.0→baseline, speed decays
 from 7x, logo scales in with a slight tilt (35°→0°) — all eased with
