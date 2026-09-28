@@ -82,6 +82,12 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   final List<Uint8List?> _customCloudBytes = List<Uint8List?>.filled(3, null);
   final List<ui.Image?> _customCloudImages = List<ui.Image?>.filled(3, null);
 
+  /// Same "session-only, `null` = bundled default" pattern as the logo/cloud
+  /// slots above, for the static starfield background (`assets/stars_bg.png`).
+  /// Only needs raw bytes (drawn via `Image.memory`, not the raw-canvas
+  /// painter), unlike the cloud slots.
+  Uint8List? _customStarsBytes;
+
   // "Share params" box at the bottom of the panel: a plain-text (JSON)
   // dump of every slider value (never the uploaded images — those aren't
   // meant to travel through a chat message). One person hits "Copy", pastes
@@ -538,6 +544,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
   void _resetLogo() => setState(() => _customLogoBytes = null);
 
+  Future<void> _pickStars() async {
+    final bytes = await _pickImageBytes();
+    if (bytes == null || !mounted) return;
+    setState(() => _customStarsBytes = bytes);
+  }
+
+  void _resetStars() => setState(() => _customStarsBytes = null);
+
   Future<void> _pickCloud(int index) async {
     final bytes = await _pickImageBytes();
     if (bytes == null) return;
@@ -695,12 +709,18 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                 // or animates — sits above the background gradient but
                 // below the spiral/logo, and is unaffected by the zoom and
                 // rotation transforms applied to those below.
-                const Positioned.fill(
-                  child: Image(
-                    image: AssetImage('assets/stars_bg.png'),
-                    fit: BoxFit.cover,
-                    alignment: Alignment.center,
-                  ),
+                Positioned.fill(
+                  child: _customStarsBytes != null
+                      ? Image.memory(
+                          _customStarsBytes!,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                        )
+                      : const Image(
+                          image: AssetImage('assets/stars_bg.png'),
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                        ),
                 ),
                 // Overall zoom + rotation knobs: scale/spin the spiral +
                 // logo together as one rigid piece (not the full-bleed
@@ -1013,6 +1033,22 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           ),
                           const SizedBox(height: 8),
                         ],
+                        _AssetPickerRow(
+                          label: 'Stars BG',
+                          preview: _customStarsBytes != null
+                              ? Image.memory(
+                                  _customStarsBytes!,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset(
+                                  'assets/stars_bg.png',
+                                  fit: BoxFit.cover,
+                                ),
+                          onPick: _pickStars,
+                          onReset: _customStarsBytes != null
+                              ? _resetStars
+                              : null,
+                        ),
                         const SizedBox(height: 8),
                         _LabeledSlider(
                           label: 'Speed',
