@@ -121,11 +121,26 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
   /// Whether the splash should open with the curtain-reveal overlay
   /// before the cloud-spiral intro is visible. Toggled from the "Live
-  /// tuning controls" panel; the curtain plays on top of the phone frame
-  /// (which keeps running its own intro underneath) and removes itself
-  /// once fully open.
+  /// tuning controls" panel.
   bool _startWithCurtain = true;
+
+  /// Whether the curtain is at rest, fully CLOSED (the static
+  /// `CurtainClosedFrame` — no animation, screenshot + fold texture,
+  /// full bleed). True from the very first frame, and again once a
+  /// `reverse` close finishes. False the moment an open starts.
+  bool _curtainClosed = true;
+
+  /// Whether an actively-animating `CurtainOverlay` is mounted right
+  /// now (opening or closing). Only one of `_curtainClosed`/
+  /// `_showCurtain` is ever meaningfully true at a time; both false
+  /// means the curtain is fully open and gone (the normal
+  /// intro/looping/outro/done view, unobstructed).
   bool _showCurtain = false;
+
+  /// Direction of the currently-mounted `CurtainOverlay`: false = opening
+  /// (closed → open), true = closing (open → closed, played by "To
+  /// Start"). Meaningless while `_showCurtain` is false.
+  bool _curtainReverse = false;
 
   double _spiralTimeSec = 0;
   double _breathe = 0; // 0..1, drives the logo glow pulse
@@ -546,7 +561,23 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     setState(() {
       _state = SplashState.intro;
       _stateElapsedSec = 0;
-      _showCurtain = _startWithCurtain;
+      if (_startWithCurtain) {
+        _curtainClosed = false;
+        _showCurtain = true;
+        _curtainReverse = false;
+      }
+    });
+  }
+
+  /// "To Start": plays the curtain's opening motion backward, closing it
+  /// back over the still-showing done/home screen — so the splash can be
+  /// looped smoothly (open → intro → looping → outro → done → close →
+  /// open → …) instead of jumping straight from "done" to a freshly
+  /// re-closed curtain.
+  void _closeCurtain() {
+    setState(() {
+      _showCurtain = true;
+      _curtainReverse = true;
     });
   }
 
@@ -790,12 +821,23 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                                     fit: BoxFit.cover,
                                   ),
                                 splashContent,
+                                // Resting closed curtain — static, no
+                                // animation — shown on the very first
+                                // frame and again once a "To Start"
+                                // close finishes. Swapped for the
+                                // animating `CurtainOverlay` the moment
+                                // either direction starts.
+                                if (_curtainClosed && !_showCurtain)
+                                  const CurtainClosedFrame(),
                                 if (_showCurtain)
                                   CurtainOverlay(
                                     width: _phoneWidth,
                                     height: _phoneHeight,
-                                    onComplete: () =>
-                                        setState(() => _showCurtain = false),
+                                    reverse: _curtainReverse,
+                                    onComplete: () => setState(() {
+                                      _showCurtain = false;
+                                      _curtainClosed = _curtainReverse;
+                                    }),
                                   ),
                               ],
                             ),
@@ -1257,6 +1299,21 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                       child: const Text('Trigger App Loaded (Exit)'),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  // Only makes sense once we're sitting on the plain
+                  // done/home screen with the curtain fully open and
+                  // gone — closes it back to the resting frame, ready
+                  // for another loop.
+                  onPressed:
+                      (_state == SplashState.done &&
+                          _startWithCurtain &&
+                          !_curtainClosed &&
+                          !_showCurtain)
+                      ? _closeCurtain
+                      : null,
+                  child: const Text('To Start (close curtain)'),
                 ),
               ],
             ),
