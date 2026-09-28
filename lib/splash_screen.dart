@@ -52,14 +52,13 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   // Intro choreography: the spiral's shape (Reach/Turns/Spacing) is always
   // the full LOOPING one — never animated — and only `_fillAmount` (see
   // CloudSpiralPainter) reveals it gradually from the logo tip outward, like
-  // a wipe. Overall rotation eases from `_introRotationStartDeg` down to the
-  // baseline `_rotationDeg`, and zoom grows from 1.0 (no zoom) up to the
-  // baseline `_globalZoom`, all together over `_introDuration`. Flow-speed
-  // decays from a fast "just formed" whirl down to the calm baseline pace on
-  // top of that.
+  // a wipe. Overall rotation holds flat at the baseline `_rotationDeg`
+  // throughout (no intro swirl-in), while zoom grows from 1.0 (no zoom) up
+  // to the baseline `_globalZoom` over `_introDuration`. Flow-speed decays
+  // from a fast "just formed" whirl down to the calm baseline pace on top
+  // of that.
   static const _introSpeedBoost = 7.0;
   static const _introLogoTiltDeg = 35.0;
-  static const _introRotationStartDeg = 70.0;
 
   // Below this body width the desktop side-by-side layout (fixed phone +
   // fixed 360px controls column) no longer fits without squeezing the
@@ -654,9 +653,11 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     final effectiveFill = _state == SplashState.intro
         ? ui.lerpDouble(0.0, _fillAmount / 100, introGrowEase)!
         : _fillAmount / 100;
-    final effectiveRotationDeg = _state == SplashState.intro
-        ? ui.lerpDouble(_introRotationStartDeg, _rotationDeg, introGrowEase)!
-        : _rotationDeg;
+    // Intro no longer swirls the whole composition in from
+    // `_introRotationStartDeg` — it holds at the baseline `_rotationDeg`
+    // throughout, same as LOOPING/OUTRO. The logo's own small settle-tilt
+    // (`logoRotationRad` above) is unaffected — that's a separate effect.
+    final effectiveRotationDeg = _rotationDeg;
     final effectiveZoom = switch (_state) {
       SplashState.intro => ui.lerpDouble(1.0, _globalZoom, introGrowEase)!,
       SplashState.outro => ui.lerpDouble(
