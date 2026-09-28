@@ -284,13 +284,13 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// `splashContent`) — it's a fixed UI element pinned near the top of the
   /// screen, not part of the spinning composition. Shown in the UI as
   /// "Title Scale".
-  double _titleScale = 1.0;
+  double _titleScale = 0.5;
 
   /// Pixel offset of the title wordmark from its default anchor (top
   /// center, just below the status-bar area). Shown in the UI as
   /// "Title X"/"Title Y".
   double _titleOffsetX = 0.0;
-  double _titleOffsetY = 0.0;
+  double _titleOffsetY = 610.0;
 
   /// Cloud sprite variants to pick from — add more paths here (and to
   /// pubspec.yaml's assets list) to have particles randomly (but stably,
@@ -512,7 +512,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
           _titleOffsetX = v.clamp(-200, 200);
         }
         if (asDouble('titleY') case final v?) {
-          _titleOffsetY = v.clamp(-200, 200);
+          _titleOffsetY = v.clamp(-200, 700);
         }
         if (asColor('bgTop') case final c?) {
           _bgTopColor = c;
@@ -1405,7 +1405,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           label: 'Title Y',
                           value: _titleOffsetY,
                           min: -200,
-                          max: 200,
+                          max: 700,
                           unit: 'px',
                           description: 'Зсув тайтла по вертикалі',
                           onChanged: (v) =>
