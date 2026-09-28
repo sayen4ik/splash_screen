@@ -152,7 +152,6 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   bool _curtainReverse = false;
 
   double _spiralTimeSec = 0;
-  double _breathe = 0; // 0..1, drives the logo glow pulse
 
   // Baseline defaults below are the settings the team landed on after
   // hand-tuning every knob live (2026-09-26) — this is the look new
@@ -249,14 +248,29 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   double _spawnOffsetX = 2.0;
   double _spawnOffsetY = 7.0;
 
+  /// Live size knob for the logo itself, independent of `_globalZoom` (which
+  /// scales spiral + logo together) and the intro's own pop-in animation
+  /// (which multiplies on top of this) — 1.0 = the base 90x90 box. Shown in
+  /// the UI as "Logo Scale".
+  double _logoScale = 1.0;
+
+  /// Pixel offset (from the phone-frame canvas' own center) of the logo
+  /// itself — unlike `_spawnOffsetX`/`_spawnOffsetY` (which move the
+  /// spiral's spawn point only), this moves the logo image too. Applied
+  /// *before* the zoom/rotation transform above, so it scales/rotates along
+  /// with everything else rather than fighting it. Shown in the UI as
+  /// "Logo X"/"Logo Y".
+  double _logoOffsetX = 0.0;
+  double _logoOffsetY = 0.0;
+
   /// Cloud sprite variants to pick from — add more paths here (and to
   /// pubspec.yaml's assets list) to have particles randomly (but stably,
   /// see [CloudSpiralPainter]) mix between several cloud shapes instead of
   /// stamping the same one everywhere.
   static const _cloudAssetPaths = [
-    'assets/cloud_blob_16.webp',
-    'assets/cloud_blob_17.webp',
-    'assets/cloud_blob_18.webp',
+    'assets/cloud_blob_19.webp',
+    'assets/cloud_blob_19.webp',
+    'assets/cloud_blob_19.webp',
   ];
 
   @override
@@ -349,6 +363,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     'rotate': _rotationDeg,
     'spawnX': _spawnOffsetX,
     'spawnY': _spawnOffsetY,
+    'logoScale': _logoScale,
+    'logoX': _logoOffsetX,
+    'logoY': _logoOffsetY,
     'bgTop': _colorToHex(_bgTopColor),
     'bgBottom': _colorToHex(_bgBottomColor),
     'fgTop': _colorToHex(_fgTopColor),
@@ -443,6 +460,15 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         if (asDouble('spawnY') case final v?) {
           _spawnOffsetY = v.clamp(-200, 200);
         }
+        if (asDouble('logoScale') case final v?) {
+          _logoScale = v.clamp(0.1, 4.0);
+        }
+        if (asDouble('logoX') case final v?) {
+          _logoOffsetX = v.clamp(-200, 200);
+        }
+        if (asDouble('logoY') case final v?) {
+          _logoOffsetY = v.clamp(-200, 200);
+        }
         if (asColor('bgTop') case final c?) {
           _bgTopColor = c;
           _bgTopHexController.text = _colorToHex(c);
@@ -536,7 +562,6 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
     setState(() {
       _stateElapsedSec += dt;
-      _breathe = (_breathe + dt * 0.6) % 1.0;
 
       double speedNow = _speedMultiplier;
       if (_state == SplashState.intro) {
@@ -623,8 +648,6 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
       SplashState.intro => (_introLogoTiltDeg * (1 - logoEase)) * math.pi / 180,
       _ => 0.0,
     };
-    final glowBlur = 25 + 15 * (0.5 - 0.5 * math.cos(_breathe * 2 * math.pi));
-
     // The spiral's own shape (Reach/Turns/Spacing) never changes — only how
     // much of it is revealed, from the logo tip outward, via `fillAmount`.
     final introGrowEase = Curves.easeInOutSine.transform(introT);
@@ -718,30 +741,22 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                             size: Size.infinite,
                           ),
                         Center(
-                          child: Transform.rotate(
-                            angle: logoRotationRad,
-                            child: Transform.scale(
-                              scale: logoScale,
-                              child: Container(
-                                width: 90,
-                                height: 90,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFB48CFF)
-                                          .withValues(alpha: 0.85),
-                                      blurRadius: glowBlur,
-                                      spreadRadius: 4,
-                                    ),
-                                  ],
+                          child: Transform.translate(
+                            offset: Offset(_logoOffsetX, _logoOffsetY),
+                            child: Transform.rotate(
+                              angle: logoRotationRad,
+                              child: Transform.scale(
+                                scale: logoScale * _logoScale,
+                                child: SizedBox(
+                                  width: 90,
+                                  height: 90,
+                                  child: _customLogoBytes != null
+                                      ? Image.memory(
+                                          _customLogoBytes!,
+                                          fit: BoxFit.contain,
+                                        )
+                                      : Image.asset('assets/logo.png'),
                                 ),
-                                child: _customLogoBytes != null
-                                    ? Image.memory(
-                                        _customLogoBytes!,
-                                        fit: BoxFit.contain,
-                                      )
-                                    : Image.asset('assets/logo.png'),
                               ),
                             ),
                           ),
@@ -1197,6 +1212,37 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                               '(логотип не рухається)',
                           onChanged: (v) =>
                               setState(() => _spawnOffsetY = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Logo Scale',
+                          value: _logoScale,
+                          min: 0.1,
+                          max: 4.0,
+                          description: 'Розмір логотипа',
+                          onChanged: (v) => setState(() => _logoScale = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Logo X',
+                          value: _logoOffsetX,
+                          min: -200,
+                          max: 200,
+                          unit: 'px',
+                          description: 'Зсув логотипа по горизонталі',
+                          onChanged: (v) =>
+                              setState(() => _logoOffsetX = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Logo Y',
+                          value: _logoOffsetY,
+                          min: -200,
+                          max: 200,
+                          unit: 'px',
+                          description: 'Зсув логотипа по вертикалі',
+                          onChanged: (v) =>
+                              setState(() => _logoOffsetY = v),
                         ),
                         const SizedBox(height: 20),
                         const Text(

@@ -155,7 +155,9 @@ tuned live with sliders before porting it.
   now-unused approach** (nested self-similar copies of one spiral image,
   "Droste effect") kept around for reference/comparison. The current splash
   screen does not use these.
-- `assets/logo.png` — the center logo (currently a nautilus-spiral 'C').
+- `assets/logo.png` — the center logo (currently a white nautilus-spiral
+  'C', updated 2026-09-28 from the earlier purple-tinted version — same
+  shape/tail direction, so `spawnAngleRad` didn't need re-deriving).
   Needs a transparent background; the cloud spiral's spawn angle
   (`CloudSpiralConfig.spawnAngleRad`) must point along wherever this logo's
   own tail/tip fades out, so the clouds read as continuing out of the logo
@@ -163,7 +165,10 @@ tuned live with sliders before porting it.
 - `assets/cloud_blob_*.webp` — cloud puff sprites. Only 3 are "active" at
   once (see `_cloudAssetPaths` in `splash_screen.dart`); the rest are past
   sets kept in case of reverting. Multiple images in `_cloudAssetPaths` get
-  randomly (but stably per-particle) mixed along the spiral.
+  randomly (but stably per-particle) mixed along the spiral. As of
+  2026-09-28 all three active slots point at the same new sprite,
+  `assets/cloud_blob_19.webp` (a placeholder — "all three clouds like this
+  for now" per the team) rather than three distinct variants.
 - `assets/stars_bg.png` — static starfield background. Drawn once, full
   screen (`BoxFit.cover`, centered), above the base gradient but below the
   spiral/logo — it never animates and is unaffected by the zoom/rotation
@@ -215,6 +220,9 @@ save it back (the slider only changes runtime state, not the source).
 | `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |
 | `_spawnOffsetX` | 2.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
 | `_spawnOffsetY` | 7.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
+| `_logoScale` | 1.0 | Logo Scale | Size of the logo itself, independent of `_globalZoom` (which scales spiral + logo together) and the intro's own pop-in animation (multiplies on top of this) |
+| `_logoOffsetX` | 0.0 | Logo X | Pixel offset of the logo image itself, horizontal — unlike Spawn X (which only moves the spiral's spawn point), this moves the logo |
+| `_logoOffsetY` | 0.0 | Logo Y | Pixel offset of the logo image itself, vertical — unlike Spawn Y (which only moves the spiral's spawn point), this moves the logo |
 
 The "Colors" section at the top of the right panel has 4 hex color rows
 (`RRGGBB`, no `#`, each next to a live swatch — an invalid hex is just
@@ -238,7 +246,7 @@ ignored, leaving the previous color in place):
 
 All 7 values are included in "Share params" (`bgTop`/`bgBottom`/`fgTop`/
 `fgBottom` as hex strings, `fgTopOpacity`/`fgBottomOpacity`/`fgTopStop`
-as numbers) alongside every slider.
+as numbers) alongside every slider, including `logoScale`/`logoX`/`logoY`.
 
 Intro (~1.5s): Fill 0→100%, Rotate 70°→0°, Zoom 1.0→baseline, speed decays
 from 7x, logo scales in with a slight tilt (35°→0°) — all eased with
