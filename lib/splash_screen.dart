@@ -166,14 +166,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// Live size knob for the *outer* (far/near-camera) clouds — the ones
   /// that have traveled furthest from the logo tip, i.e. how big puffs get
   /// once they've scaled all the way out. Shown in the UI as "Scale Out".
-  double _sizeMultiplier = 1.41;
+  double _sizeMultiplier = 2.26;
 
   /// Live size knob for the clouds right at the logo tip (spawn size), i.e.
   /// how big puffs are the moment they scale in from the logo. Shown in the
   /// UI as "Scale In". Together with `_sizeMultiplier` ("Scale Out") this
   /// sets how much clouds grow over their trip out — a bigger gap between
   /// the two reads as puffs visibly ballooning outward as they travel.
-  double _startSizeMultiplier = 0.19;
+  double _startSizeMultiplier = 2.55;
 
   /// Where (0..1, along life-progress `p`) a puff sits exactly halfway
   /// between Scale In and Scale Out in size. 0.5 = old plain-linear growth.
@@ -189,7 +189,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
   /// Live knob for how far apart consecutive puffs sit along the spiral
   /// (1.0 = evenly fills the whole loop, as before).
-  double _particleSpacing = 0.5;
+  double _particleSpacing = 1.3;
 
   /// Live ellipse-squash knob (1.0 = perfect circle, less = flatter oval),
   /// for the tilted-tunnel "distort" look.
@@ -252,7 +252,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// scales spiral + logo together) and the intro's own pop-in animation
   /// (which multiplies on top of this) — 1.0 = the base 90x90 box. Shown in
   /// the UI as "Logo Scale".
-  double _logoScale = 1.0;
+  double _logoScale = 2.55;
 
   /// Pixel offset (from the phone-frame canvas' own center) of the logo
   /// itself — unlike `_spawnOffsetX`/`_spawnOffsetY` (which move the
@@ -260,8 +260,8 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// *before* the zoom/rotation transform above, so it scales/rotates along
   /// with everything else rather than fighting it. Shown in the UI as
   /// "Logo X"/"Logo Y".
-  double _logoOffsetX = 0.0;
-  double _logoOffsetY = 0.0;
+  double _logoOffsetX = 18.0;
+  double _logoOffsetY = -34.0;
 
   /// Cloud sprite variants to pick from — add more paths here (and to
   /// pubspec.yaml's assets list) to have particles randomly (but stably,

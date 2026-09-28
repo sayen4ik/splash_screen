@@ -204,11 +204,11 @@ save it back (the slider only changes runtime state, not the source).
 | Field | Value | UI label | What it does |
 |---|---|---|---|
 | `_speedMultiplier` | 0.0303 | Speed | Loop flow speed |
-| `_sizeMultiplier` | 1.41 | Scale Out | Cloud size at the outer edge |
-| `_startSizeMultiplier` | 0.19 | Scale In | Cloud size at the logo tip (spawn) |
+| `_sizeMultiplier` | 2.26 | Scale Out | Cloud size at the outer edge |
+| `_startSizeMultiplier` | 2.55 | Scale In | Cloud size at the logo tip (spawn) |
 | `_sizeMidpoint` | 0.5 | Scale Mid | Where (0..1 along `p`) a puff is exactly halfway between Scale In and Scale Out in size — 0.5 is the old plain-linear growth; push toward 0/1 to shift when the size-up happens |
 | `_particleCount` | 40 | Count | Base puff count |
-| `_particleSpacing` | 0.5 | Spacing | Density (higher = sparser) |
+| `_particleSpacing` | 1.3 | Spacing | Density (higher = sparser) |
 | `_squashFactor` | 0.7235 | Squash | Ellipse squash of the spiral |
 | `_tiltAngleDeg` | -39.0 | Tilt | Tilt axis of the squash |
 | `_turnsMultiplier` | 2.76 | Turns | How many turns the spiral winds |
@@ -220,9 +220,9 @@ save it back (the slider only changes runtime state, not the source).
 | `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |
 | `_spawnOffsetX` | 2.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
 | `_spawnOffsetY` | 7.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
-| `_logoScale` | 1.0 | Logo Scale | Size of the logo itself, independent of `_globalZoom` (which scales spiral + logo together) and the intro's own pop-in animation (multiplies on top of this) |
-| `_logoOffsetX` | 0.0 | Logo X | Pixel offset of the logo image itself, horizontal — unlike Spawn X (which only moves the spiral's spawn point), this moves the logo |
-| `_logoOffsetY` | 0.0 | Logo Y | Pixel offset of the logo image itself, vertical — unlike Spawn Y (which only moves the spiral's spawn point), this moves the logo |
+| `_logoScale` | 2.55 | Logo Scale | Size of the logo itself, independent of `_globalZoom` (which scales spiral + logo together) and the intro's own pop-in animation (multiplies on top of this) |
+| `_logoOffsetX` | 18.0 | Logo X | Pixel offset of the logo image itself, horizontal — unlike Spawn X (which only moves the spiral's spawn point), this moves the logo |
+| `_logoOffsetY` | -34.0 | Logo Y | Pixel offset of the logo image itself, vertical — unlike Spawn Y (which only moves the spiral's spawn point), this moves the logo |
 
 The "Colors" section at the top of the right panel has 4 hex color rows
 (`RRGGBB`, no `#`, each next to a live swatch — an invalid hex is just
