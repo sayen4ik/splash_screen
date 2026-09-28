@@ -88,6 +88,11 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// painter), unlike the cloud slots.
   Uint8List? _customStarsBytes;
 
+  /// Same "session-only, `null` = bundled default" pattern, for the title
+  /// wordmark (`assets/title.png`) — see `_titleScale`/`_titleOffsetX`/
+  /// `_titleOffsetY` below for its position/size knobs.
+  Uint8List? _customTitleBytes;
+
   // "Share params" box at the bottom of the panel: a plain-text (JSON)
   // dump of every slider value (never the uploaded images — those aren't
   // meant to travel through a chat message). One person hits "Copy", pastes
@@ -107,7 +112,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   Color _fgTopColor = const Color(0xFF100C23);
   Color _fgBottomColor = const Color(0xFF100C23);
   double _fgTopOpacity = 0.0;
-  double _fgBottomOpacity = 19.0;
+  double _fgBottomOpacity = 67.0;
 
   /// Where the foreground gradient's *top* stop sits, as a 0..1 fraction
   /// of the screen from the top — the bottom stop always stays pinned at
@@ -116,7 +121,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// color holds solid over more of the upper screen before the blend
   /// into FG Bottom starts. 0.0 = old behavior (transition spans the
   /// full screen top-to-bottom).
-  double _fgTopStop = 0.66;
+  double _fgTopStop = 0.56;
   late final TextEditingController _bgTopHexController;
   late final TextEditingController _bgBottomHexController;
   late final TextEditingController _fgTopHexController;
@@ -271,7 +276,21 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// Live opacity knob (0-100%) for the logo image itself — independent of
   /// `sceneOpacity` (which fades the *whole* scene in/out for intro/outro).
   /// Shown in the UI as "Logo Opacity".
-  double _logoOpacity = 72.0;
+  double _logoOpacity = 86.0;
+
+  /// Live size knob for the title wordmark (`assets/title.png`) — 1.0 = the
+  /// image's own natural width capped to the phone-frame width. Unlike the
+  /// logo, the title sits *outside* the spiral's zoom/rotation group (see
+  /// `splashContent`) — it's a fixed UI element pinned near the top of the
+  /// screen, not part of the spinning composition. Shown in the UI as
+  /// "Title Scale".
+  double _titleScale = 1.0;
+
+  /// Pixel offset of the title wordmark from its default anchor (top
+  /// center, just below the status-bar area). Shown in the UI as
+  /// "Title X"/"Title Y".
+  double _titleOffsetX = 0.0;
+  double _titleOffsetY = 0.0;
 
   /// Cloud sprite variants to pick from — add more paths here (and to
   /// pubspec.yaml's assets list) to have particles randomly (but stably,
@@ -377,6 +396,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     'logoX': _logoOffsetX,
     'logoY': _logoOffsetY,
     'logoOpacity': _logoOpacity,
+    'titleScale': _titleScale,
+    'titleX': _titleOffsetX,
+    'titleY': _titleOffsetY,
     'bgTop': _colorToHex(_bgTopColor),
     'bgBottom': _colorToHex(_bgBottomColor),
     'fgTop': _colorToHex(_fgTopColor),
@@ -483,6 +505,15 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         if (asDouble('logoOpacity') case final v?) {
           _logoOpacity = v.clamp(0, 100);
         }
+        if (asDouble('titleScale') case final v?) {
+          _titleScale = v.clamp(0.1, 4.0);
+        }
+        if (asDouble('titleX') case final v?) {
+          _titleOffsetX = v.clamp(-200, 200);
+        }
+        if (asDouble('titleY') case final v?) {
+          _titleOffsetY = v.clamp(-200, 200);
+        }
         if (asColor('bgTop') case final c?) {
           _bgTopColor = c;
           _bgTopHexController.text = _colorToHex(c);
@@ -560,6 +591,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   }
 
   void _resetStars() => setState(() => _customStarsBytes = null);
+
+  Future<void> _pickTitle() async {
+    final bytes = await _pickImageBytes();
+    if (bytes == null || !mounted) return;
+    setState(() => _customTitleBytes = bytes);
+  }
+
+  void _resetTitle() => setState(() => _customTitleBytes = null);
 
   Future<void> _pickCloud(int index) async {
     final bytes = await _pickImageBytes();
@@ -819,6 +858,26 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
               ),
             ),
           ),
+          // Title wordmark: a fixed UI element pinned near the top of the
+          // screen, outside the spiral's zoom/rotation group so it never
+          // spins or scales along with the composition — only its own
+          // Title Scale/X/Y knobs move it. Sits above the FG tint so the
+          // tint never washes it out.
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 48),
+              child: Transform.translate(
+                offset: Offset(_titleOffsetX, _titleOffsetY),
+                child: Transform.scale(
+                  scale: _titleScale,
+                  child: _customTitleBytes != null
+                      ? Image.memory(_customTitleBytes!, fit: BoxFit.contain)
+                      : Image.asset('assets/title.png', fit: BoxFit.contain),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1059,6 +1118,23 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           onPick: _pickStars,
                           onReset: _customStarsBytes != null
                               ? _resetStars
+                              : null,
+                        ),
+                        const SizedBox(height: 8),
+                        _AssetPickerRow(
+                          label: 'Title',
+                          preview: _customTitleBytes != null
+                              ? Image.memory(
+                                  _customTitleBytes!,
+                                  fit: BoxFit.contain,
+                                )
+                              : Image.asset(
+                                  'assets/title.png',
+                                  fit: BoxFit.contain,
+                                ),
+                          onPick: _pickTitle,
+                          onReset: _customTitleBytes != null
+                              ? _resetTitle
                               : null,
                         ),
                         const SizedBox(height: 8),
@@ -1303,6 +1379,37 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           description: 'Прозорість логотипа',
                           onChanged: (v) =>
                               setState(() => _logoOpacity = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Title Scale',
+                          value: _titleScale,
+                          min: 0.1,
+                          max: 4.0,
+                          description: 'Розмір зображення зверху (тайтл)',
+                          onChanged: (v) => setState(() => _titleScale = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Title X',
+                          value: _titleOffsetX,
+                          min: -200,
+                          max: 200,
+                          unit: 'px',
+                          description: 'Зсув тайтла по горизонталі',
+                          onChanged: (v) =>
+                              setState(() => _titleOffsetX = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Title Y',
+                          value: _titleOffsetY,
+                          min: -200,
+                          max: 200,
+                          unit: 'px',
+                          description: 'Зсув тайтла по вертикалі',
+                          onChanged: (v) =>
+                              setState(() => _titleOffsetY = v),
                         ),
                         const SizedBox(height: 20),
                         const Text(

@@ -63,6 +63,7 @@ flutter:
     - assets/vortex_spiral.png
     - assets/cloud_segment.png
     - assets/logo.png
+    - assets/title.png
     - assets/stars_bg.png
     - assets/cloud_blob_1.webp
     - assets/cloud_blob_2.webp

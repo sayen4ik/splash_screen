@@ -172,7 +172,14 @@ tuned live with sliders before porting it.
 - `assets/stars_bg.png` — static starfield background. Drawn once, full
   screen (`BoxFit.cover`, centered), above the base gradient but below the
   spiral/logo — it never animates and is unaffected by the zoom/rotation
-  transforms applied to the spiral+logo group.
+  transforms applied to the spiral+logo group. Replaced 2026-09-28 with a
+  denser, more photographic starfield.
+- `assets/title.png` — the "ПОТОЙБІЧЧЯ Сільпо" wordmark, added
+  2026-09-28. Unlike the logo, it's pinned near the top of the screen via
+  `Align(alignment: Alignment.topCenter)` and sits *outside* the spiral's
+  zoom/rotation `Transform` group — it never spins or scales with the
+  composition, only via its own Title Scale/X/Y knobs. Drawn above the FG
+  tint so the tint never washes it out.
 - `assets/vortex_spiral.png`, `cloud_segment.png` — assets for the unused
   Droste-effect playground, not the splash screen.
 
@@ -223,7 +230,10 @@ save it back (the slider only changes runtime state, not the source).
 | `_logoScale` | 1.77 | Logo Scale | Size of the logo itself, independent of `_globalZoom` (which scales spiral + logo together) and the intro's own pop-in animation (multiplies on top of this) |
 | `_logoOffsetX` | 20.0 | Logo X | Pixel offset of the logo image itself, horizontal — unlike Spawn X (which only moves the spiral's spawn point), this moves the logo |
 | `_logoOffsetY` | -16.0 | Logo Y | Pixel offset of the logo image itself, vertical — unlike Spawn Y (which only moves the spiral's spawn point), this moves the logo |
-| `_logoOpacity` | 72.0 | Logo Opacity | Opacity (0-100%) of the logo image itself, independent of `sceneOpacity` (which fades the whole scene for intro/outro) |
+| `_logoOpacity` | 86.0 | Logo Opacity | Opacity (0-100%) of the logo image itself, independent of `sceneOpacity` (which fades the whole scene for intro/outro) |
+| `_titleScale` | 1.0 | Title Scale | Size of the title wordmark (`assets/title.png`), pinned near the top of the screen — outside the spiral's zoom/rotation group, so it never spins with the composition |
+| `_titleOffsetX` | 0.0 | Title X | Pixel offset of the title wordmark from its default top-center anchor, horizontal |
+| `_titleOffsetY` | 0.0 | Title Y | Pixel offset of the title wordmark from its default top-center anchor, vertical |
 
 The "Colors" section at the top of the right panel has 4 hex color rows
 (`RRGGBB`, no `#`, each next to a live swatch — an invalid hex is just
@@ -237,9 +247,9 @@ ignored, leaving the previous color in place):
   `#100C23`/`#100C23`) — the cosmetic tint drawn *over* the whole scene
   (above clouds/logo, below the debug UI), also top color → bottom
   color, but each end additionally has its own live opacity slider
-  (`_fgTopOpacity`/`_fgBottomOpacity`, 0–100%, default 0%/19%) — unlike
+  (`_fgTopOpacity`/`_fgBottomOpacity`, 0–100%, default 0%/67%) — unlike
   the background, both hue *and* fade strength are tunable per end here.
-  A "FG Top Pos" slider (`_fgTopStop`, 0–95%, default 66%) additionally
+  A "FG Top Pos" slider (`_fgTopStop`, 0–95%, default 56%) additionally
   moves the gradient's *top* stop position down toward the bottom — the
   bottom stop always stays pinned at 1.0 (the very bottom of the
   screen); raising it holds FG Top solid over more of the upper screen
@@ -248,7 +258,7 @@ ignored, leaving the previous color in place):
 All 7 values are included in "Share params" (`bgTop`/`bgBottom`/`fgTop`/
 `fgBottom` as hex strings, `fgTopOpacity`/`fgBottomOpacity`/`fgTopStop`
 as numbers) alongside every slider, including
-`logoScale`/`logoX`/`logoY`/`logoOpacity`.
+`logoScale`/`logoX`/`logoY`/`logoOpacity`/`titleScale`/`titleX`/`titleY`.
 
 Intro (~1.5s): Fill 0→100%, Rotate 70°→0°, Zoom 1.0→baseline, speed decays
 from 7x, logo scales in with a slight tilt (35°→0°) — all eased with
