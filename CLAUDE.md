@@ -220,10 +220,10 @@ save it back (the slider only changes runtime state, not the source).
 | `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |
 | `_spawnOffsetX` | 6.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
 | `_spawnOffsetY` | -3.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
-| `_logoScale` | 1.85 | Logo Scale | Size of the logo itself, independent of `_globalZoom` (which scales spiral + logo together) and the intro's own pop-in animation (multiplies on top of this) |
-| `_logoOffsetX` | 18.0 | Logo X | Pixel offset of the logo image itself, horizontal — unlike Spawn X (which only moves the spiral's spawn point), this moves the logo |
+| `_logoScale` | 1.77 | Logo Scale | Size of the logo itself, independent of `_globalZoom` (which scales spiral + logo together) and the intro's own pop-in animation (multiplies on top of this) |
+| `_logoOffsetX` | 20.0 | Logo X | Pixel offset of the logo image itself, horizontal — unlike Spawn X (which only moves the spiral's spawn point), this moves the logo |
 | `_logoOffsetY` | -16.0 | Logo Y | Pixel offset of the logo image itself, vertical — unlike Spawn Y (which only moves the spiral's spawn point), this moves the logo |
-| `_logoOpacity` | 100.0 | Logo Opacity | Opacity (0-100%) of the logo image itself, independent of `sceneOpacity` (which fades the whole scene for intro/outro) |
+| `_logoOpacity` | 72.0 | Logo Opacity | Opacity (0-100%) of the logo image itself, independent of `sceneOpacity` (which fades the whole scene for intro/outro) |
 
 The "Colors" section at the top of the right panel has 4 hex color rows
 (`RRGGBB`, no `#`, each next to a live swatch — an invalid hex is just

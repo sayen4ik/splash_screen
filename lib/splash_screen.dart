@@ -257,7 +257,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// scales spiral + logo together) and the intro's own pop-in animation
   /// (which multiplies on top of this) — 1.0 = the base 90x90 box. Shown in
   /// the UI as "Logo Scale".
-  double _logoScale = 1.85;
+  double _logoScale = 1.77;
 
   /// Pixel offset (from the phone-frame canvas' own center) of the logo
   /// itself — unlike `_spawnOffsetX`/`_spawnOffsetY` (which move the
@@ -265,13 +265,13 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// *before* the zoom/rotation transform above, so it scales/rotates along
   /// with everything else rather than fighting it. Shown in the UI as
   /// "Logo X"/"Logo Y".
-  double _logoOffsetX = 18.0;
+  double _logoOffsetX = 20.0;
   double _logoOffsetY = -16.0;
 
   /// Live opacity knob (0-100%) for the logo image itself — independent of
   /// `sceneOpacity` (which fades the *whole* scene in/out for intro/outro).
   /// Shown in the UI as "Logo Opacity".
-  double _logoOpacity = 100.0;
+  double _logoOpacity = 72.0;
 
   /// Cloud sprite variants to pick from — add more paths here (and to
   /// pubspec.yaml's assets list) to have particles randomly (but stably,
