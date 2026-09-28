@@ -43103,21 +43103,18 @@ break A}B:{if(p){p=35*(1-r)*3.141592653589793/180
 break B}p=0
 break B}n=B.DZ.a8(b9)
 m=b3.fr
-l=m===B.dO
-k=b3.x2/100
-if(l){j=A.R(0,k,n)
-j.toString
-k=j}i=b3.xr
-if(l){l=A.R(70,i,n)
-l.toString
-i=l}C:{if(B.dO===m){m=A.R(1,b3.x1,n)
+l=b3.x2/100
+if(m===B.dO){k=A.R(0,l,n)
+k.toString
+l=k}j=b3.xr
+C:{if(B.dO===m){m=A.R(1,b3.x1,n)
 m.toString
 break C}if(B.ie===m){m=b3.x1
 m=A.R(m,m*4,q)
 m.toString
 break C}m=b3.x1
-break C}l=t.t_
-j=A.k8(b4,new A.cK(b4,b4,b4,b4,b4,new A.kt(B.dc,B.iW,B.cp,A.c([b3.z,b3.Q],l),b4,b4),B.ap),B.bx)
+break C}k=t.t_
+i=A.k8(b4,new A.cK(b4,b4,b4,b4,b4,new A.kt(B.dc,B.iW,B.cp,A.c([b3.z,b3.Q],k),b4,b4),B.ap),B.bx)
 h=t.p
 g=A.c([],h)
 if(b3.e!=null){f=A.c([],t.jm)
@@ -43143,18 +43140,18 @@ a6=b3.to
 a7=b3.y1
 a8=b3.y2
 a9=B.c.ap(b3.p2)
-g.push(A.hq(b4,b4,b4,new A.I_(f,B.Bo,e,c,b,a,a0,a1,a2*3.141592653589793/180,a3,a4,a5,a6,a9,k,new A.h(a7,a8),b4),B.ib))}f=b3.aF
+g.push(A.hq(b4,b4,b4,new A.I_(f,B.Bo,e,c,b,a,a0,a1,a2*3.141592653589793/180,a3,a4,a5,a6,a9,l,new A.h(a7,a8),b4),B.ib))}f=b3.aF
 e=b3.q
 c=b3.aC
 b=b3.f
 g.push(A.iL(A.avy(A.aft(p,A.avx(A.eb(b!=null?A.auD(b,B.cy):A.oA(b5,B.O,b4),90,90),o*c)),new A.h(f,e)),b4,b4))
-b0=A.p8(A.eF(B.aV,A.c([A.eF(B.aV,A.c([j,B.MM,A.aft(i*3.141592653589793/180,A.avx(A.eF(B.aV,g,B.P,B.bS),m))],h),B.P,B.bS),A.i3(A.k8(b4,new A.cK(b4,b4,b4,b4,b4,new A.kt(B.dc,B.iW,B.cp,A.c([b3.as.hF(b3.ax/100),b3.at.hF(b3.ay/100)],l),A.c([b3.ch,1],t.n),b4),B.ap),B.bx),!0,b4)],h),B.P,B.bS),s)
+b0=A.p8(A.eF(B.aV,A.c([A.eF(B.aV,A.c([i,B.MM,A.aft(j*3.141592653589793/180,A.avx(A.eF(B.aV,g,B.P,B.bS),m))],h),B.P,B.bS),A.i3(A.k8(b4,new A.cK(b4,b4,b4,b4,b4,new A.kt(B.dc,B.iW,B.cp,A.c([b3.as.hF(b3.ax/100),b3.at.hF(b3.ay/100)],k),A.c([b3.ch,1],t.n),b4),B.ap),B.bx),!0,b4)],h),B.P,B.bS),s)
 s=A.eQ(48)
 p=A.lF(B.bJ,8)
 o=A.eQ(40)
 m=A.c([],h)
-l=b3.fr
-if(l===B.ie||l===B.dP)m.push(A.oA("assets/beyond_home_mock.webp",B.O,B.cz))
+k=b3.fr
+if(k===B.ie||k===B.dP)m.push(A.oA("assets/beyond_home_mock.webp",B.O,B.cz))
 m.push(b0)
 if(b3.go&&!b3.id)m.push(B.Ed)
 if(b3.id)m.push(new A.x_(390,844,b3.k1,new A.apP(b3),b4))
@@ -43169,19 +43166,19 @@ m=b3.cx
 m===$&&A.a()
 m=A.ai7(p,m,"\u041a\u043e\u043b\u0456\u0440 \u043d\u0438\u0436\u043d\u044c\u043e\u0457 \u0447\u0430\u0441\u0442\u0438\u043d\u0438 \u0431\u0430\u0437\u043e\u0432\u043e\u0433\u043e \u0433\u0440\u0430\u0434\u0456\u0454\u043d\u0442\u0430 \u0441\u0446\u0435\u043d\u0438","BG Bottom",b4,b3.ga4Z(),b4)
 p=b3.as
-l=b3.cy
-l===$&&A.a()
-l=A.ai7(p,l,"\u041a\u043e\u043b\u0456\u0440 \u0432\u0435\u0440\u0445\u043d\u044c\u043e\u0457 \u0447\u0430\u0441\u0442\u0438\u043d\u0438 \u0442\u043e\u043d\u0443\u0432\u0430\u043d\u043d\u044f \u0437\u0432\u0435\u0440\u0445\u0443 \u0441\u0446\u0435\u043d\u0438","FG Top",new A.apQ(b3),b3.ga56(),b3.ax)
+k=b3.cy
+k===$&&A.a()
+k=A.ai7(p,k,"\u041a\u043e\u043b\u0456\u0440 \u0432\u0435\u0440\u0445\u043d\u044c\u043e\u0457 \u0447\u0430\u0441\u0442\u0438\u043d\u0438 \u0442\u043e\u043d\u0443\u0432\u0430\u043d\u043d\u044f \u0437\u0432\u0435\u0440\u0445\u0443 \u0441\u0446\u0435\u043d\u0438","FG Top",new A.apQ(b3),b3.ga56(),b3.ax)
 p=A.dI("\u041f\u043e\u0437\u0438\u0446\u0456\u044f \u0432\u0435\u0440\u0445\u043d\u044c\u043e\u0457 \u0442\u043e\u0447\u043a\u0438 \u0433\u0440\u0430\u0434\u0456\u0454\u043d\u0442\u0430 \u0444\u043e\u0440\u0433\u0440\u0430\u0443\u043d\u0434\u0443 (0% \u2014 \u0432\u0435\u0440\u0445 \u0435\u043a\u0440\u0430\u043d\u0430; \u0431\u0456\u043b\u044c\u0448\u0435 \u2014 \u0437\u0441\u0443\u0432\u0430\u0454 \u0431\u043b\u0438\u0436\u0447\u0435 \u0434\u043e \u043d\u0438\u0437\u0443). \u041d\u0438\u0436\u043d\u044f \u0442\u043e\u0447\u043a\u0430 \u0437\u0430\u0432\u0436\u0434\u0438 \u0432 \u0441\u0430\u043c\u043e\u043c\u0443 \u043d\u0438\u0437\u0443","FG Top Pos",95,0,new A.apR(b3),"%",b3.ch*100)
-j=b3.at
+i=b3.at
 g=b3.db
 g===$&&A.a()
-g=A.ai7(j,g,"\u041a\u043e\u043b\u0456\u0440 \u043d\u0438\u0436\u043d\u044c\u043e\u0457 \u0447\u0430\u0441\u0442\u0438\u043d\u0438 \u0442\u043e\u043d\u0443\u0432\u0430\u043d\u043d\u044f \u0437\u0432\u0435\u0440\u0445\u0443 \u0441\u0446\u0435\u043d\u0438","FG Bottom",new A.aq1(b3),b3.ga54(),b3.ay)
-j=b3.f
-f=j!=null
-j=f?A.auD(j,B.cy):A.oA(b5,B.O,B.cy)
+g=A.ai7(i,g,"\u041a\u043e\u043b\u0456\u0440 \u043d\u0438\u0436\u043d\u044c\u043e\u0457 \u0447\u0430\u0441\u0442\u0438\u043d\u0438 \u0442\u043e\u043d\u0443\u0432\u0430\u043d\u043d\u044f \u0437\u0432\u0435\u0440\u0445\u0443 \u0441\u0446\u0435\u043d\u0438","FG Bottom",new A.aq1(b3),b3.ga54(),b3.ay)
+i=b3.f
+f=i!=null
+i=f?A.auD(i,B.cy):A.oA(b5,B.O,B.cy)
 f=f?b3.gag1():b4
-f=A.c([B.UV,B.J,o,B.J,m,B.J,l,B.J,p,B.J,g,B.ln,B.UY,B.J,new A.C2("Logo",j,b3.gaff(),f,b4),B.J],h)
+f=A.c([B.UV,B.J,o,B.J,m,B.J,k,B.J,p,B.J,g,B.ln,B.UY,B.J,new A.C2("Logo",i,b3.gaff(),f,b4),B.J],h)
 for(p=b3.r,d=0;d<3;d=b2){b2=d+1
 o=p[d]
 m=o!=null
