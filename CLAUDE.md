@@ -70,12 +70,19 @@ tuned live with sliders before porting it.
   via `onComplete`) — the cloud-spiral intro underneath plays either way,
   the curtain (when on) just covers it for the first `fadeMs +
   durationMs` before removing itself.
-- `SplashState.done` no longer swaps out the whole screen for a separate
-  full-screen mock — the phone frame just shows
-  `assets/beyond_home_mock.webp` (a real screenshot of the actual app's
-  home screen) in place of `splashContent` once the outro finishes, so
-  it reads as "the app finished loading", while the live-tuning panel
-  (including "Play Intro" to go again) stays visible the whole time.
+- The demo now **opens directly on `SplashState.done`** — just the real
+  app's home screen (`assets/beyond_home_mock.webp`), idle, nothing
+  animating — rather than autoplaying the intro. "Play Intro" is what
+  starts the splash from there (same button used to replay it later).
+  `SplashState.done` no longer swaps out the whole screen for a separate
+  full-screen mock either — the phone frame just layers the home-screen
+  image as a static base UNDER `splashContent` (bg/starfield/clouds/logo,
+  all under one `Opacity`) whenever `_state` is `outro` or `done`. Since
+  `sceneOpacity` already eases 1→0 during outro and sits flat at 0 once
+  done, the home screen shows through progressively as the scene fades —
+  a crossfade that falls out of the existing opacity animation rather
+  than a separate abrupt swap. The live-tuning panel (including "Play
+  Intro") stays visible throughout.
 - `lib/curtain_reveal_demo.dart` — the standalone prototype screen this
   was built and tuned in (own copy of the same clipper/panel logic, plus
   live sliders for Fade/Duration/Arc/Top Lead and an "Open real splash"

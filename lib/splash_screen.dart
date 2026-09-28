@@ -111,7 +111,12 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   late final Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
 
-  SplashState _state = SplashState.intro;
+  // Opens directly on the "app already loaded" screen — idle, nothing
+  // animating (the ticker's `_onTick` no-ops while `_state ==
+  // SplashState.done`) — rather than autoplaying the intro. "Play Intro"
+  // is what starts the splash from here, same button used to replay it
+  // later.
+  SplashState _state = SplashState.done;
   double _stateElapsedSec = 0;
 
   /// Whether the splash should open with the curtain-reveal overlay
@@ -120,7 +125,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// (which keeps running its own intro underneath) and removes itself
   /// once fully open.
   bool _startWithCurtain = true;
-  bool _showCurtain = true;
+  bool _showCurtain = false;
 
   double _spiralTimeSec = 0;
   double _breathe = 0; // 0..1, drives the logo glow pulse
@@ -762,34 +767,38 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(40),
-                            // Once the outro finishes, the splash's own
-                            // opacity fades to 0 (see `sceneOpacity`
-                            // above) — rather than fading to nothing, we
-                            // swap in the real app's home screen, so the
-                            // phone frame reads as "the app finished
-                            // loading" instead of just going blank. The
-                            // controls panel stays put either way (no
-                            // separate full-screen mock replacing it
-                            // anymore), so replaying is just "Play Intro".
-                            child: _state == SplashState.done
-                                ? Image.asset(
+                            // The real app's home screen sits as a static
+                            // base layer, always full-strength, whenever
+                            // we're at or past the outro — `splashContent`
+                            // (bg/starfield/clouds/logo, all under one
+                            // `Opacity`) is drawn ON TOP of it. Since
+                            // `sceneOpacity` already eases from 1 down to
+                            // 0 during outro (see above) and sits at flat
+                            // 0 once done, the home screen simply shows
+                            // through progressively as the scene fades —
+                            // a crossfade "for free" from the existing
+                            // opacity animation, not a separate one. The
+                            // controls panel stays put throughout, so
+                            // replaying is just "Play Intro".
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                if (_state == SplashState.outro ||
+                                    _state == SplashState.done)
+                                  Image.asset(
                                     'assets/beyond_home_mock.webp',
                                     fit: BoxFit.cover,
-                                  )
-                                : Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      splashContent,
-                                      if (_showCurtain)
-                                        CurtainOverlay(
-                                          width: _phoneWidth,
-                                          height: _phoneHeight,
-                                          onComplete: () => setState(
-                                            () => _showCurtain = false,
-                                          ),
-                                        ),
-                                    ],
                                   ),
+                                splashContent,
+                                if (_showCurtain)
+                                  CurtainOverlay(
+                                    width: _phoneWidth,
+                                    height: _phoneHeight,
+                                    onComplete: () =>
+                                        setState(() => _showCurtain = false),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
