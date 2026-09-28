@@ -58,7 +58,6 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   // from a fast "just formed" whirl down to the calm baseline pace on top
   // of that.
   static const _introSpeedBoost = 7.0;
-  static const _introLogoTiltDeg = 35.0;
 
   // Below this body width the desktop side-by-side layout (fixed phone +
   // fixed 360px controls column) no longer fits without squeezing the
@@ -702,13 +701,6 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
       SplashState.intro => 0.8 + 0.2 * logoEase,
       _ => 1.0,
     };
-    // The logo arrives slightly tilted and rights itself into the upright
-    // orientation it holds for the rest of the LOOPING state — so it reads
-    // as settling into place along with the spiral, not just popping in.
-    final logoRotationRad = switch (_state) {
-      SplashState.intro => (_introLogoTiltDeg * (1 - logoEase)) * math.pi / 180,
-      _ => 0.0,
-    };
     // The spiral's own shape (Reach/Turns/Spacing) never changes — only how
     // much of it is revealed, from the logo tip outward, via `fillAmount`.
     final introGrowEase = Curves.easeInOutSine.transform(introT);
@@ -716,9 +708,10 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         ? ui.lerpDouble(0.0, _fillAmount / 100, introGrowEase)!
         : _fillAmount / 100;
     // Intro no longer swirls the whole composition in from
-    // `_introRotationStartDeg` — it holds at the baseline `_rotationDeg`
-    // throughout, same as LOOPING/OUTRO. The logo's own small settle-tilt
-    // (`logoRotationRad` above) is unaffected — that's a separate effect.
+    // `_introRotationStartDeg`, and the logo no longer arrives tilted
+    // either — everything holds at its resting rotation (0 for the logo,
+    // baseline `_rotationDeg` for the composition) throughout, same as
+    // LOOPING/OUTRO.
     final effectiveRotationDeg = _rotationDeg;
     final effectiveZoom = switch (_state) {
       SplashState.intro => ui.lerpDouble(1.0, _globalZoom, introGrowEase)!,
@@ -728,6 +721,16 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         outroEase,
       )!,
       _ => _globalZoom,
+    };
+    // The title wordmark rides the shared `sceneOpacity` fade like
+    // everything else, but gets an *additional* fade-in of its own during
+    // intro (same easing, so the two multiply into a slower, more visible
+    // reveal) so it doesn't just pop in at full strength alongside the
+    // spiral. On outro it just fades (via the shared `sceneOpacity` above)
+    // — no zoom of its own, unlike the spiral+logo group's outro dive.
+    final titleIntroOpacity = switch (_state) {
+      SplashState.intro => Curves.easeOutSine.transform(introT),
+      _ => 1.0,
     };
 
     // The splash itself is rendered at a fixed phone-sized canvas (not the
@@ -812,22 +815,19 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                         Center(
                           child: Transform.translate(
                             offset: Offset(_logoOffsetX, _logoOffsetY),
-                            child: Transform.rotate(
-                              angle: logoRotationRad,
-                              child: Transform.scale(
-                                scale: logoScale * _logoScale,
-                                child: Opacity(
-                                  opacity: _logoOpacity / 100,
-                                  child: SizedBox(
-                                    width: 90,
-                                    height: 90,
-                                    child: _customLogoBytes != null
-                                        ? Image.memory(
-                                            _customLogoBytes!,
-                                            fit: BoxFit.contain,
-                                          )
-                                        : Image.asset('assets/logo.png'),
-                                  ),
+                            child: Transform.scale(
+                              scale: logoScale * _logoScale,
+                              child: Opacity(
+                                opacity: _logoOpacity / 100,
+                                child: SizedBox(
+                                  width: 90,
+                                  height: 90,
+                                  child: _customLogoBytes != null
+                                      ? Image.memory(
+                                          _customLogoBytes!,
+                                          fit: BoxFit.contain,
+                                        )
+                                      : Image.asset('assets/logo.png'),
                                 ),
                               ),
                             ),
@@ -871,9 +871,15 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                 offset: Offset(_titleOffsetX, _titleOffsetY),
                 child: Transform.scale(
                   scale: _titleScale,
-                  child: _customTitleBytes != null
-                      ? Image.memory(_customTitleBytes!, fit: BoxFit.contain)
-                      : Image.asset('assets/title.png', fit: BoxFit.contain),
+                  child: Opacity(
+                    opacity: titleIntroOpacity,
+                    child: _customTitleBytes != null
+                        ? Image.memory(
+                            _customTitleBytes!,
+                            fit: BoxFit.contain,
+                          )
+                        : Image.asset('assets/title.png', fit: BoxFit.contain),
+                  ),
                 ),
               ),
             ),
