@@ -21,8 +21,8 @@ tuned live with sliders before porting it.
   scaled to fit via `FittedBox` but never stretched off that aspect ratio),
   so it's an accurate, device-shaped preview to show a developer — not the
   raw browser-window canvas. All debug UI (state badge, sliders, Play
-  Intro/Trigger buttons) lives in a separate panel on the right and never
-  appears inside the phone frame itself. The right panel also has an
+  Intro/Trigger/To Start buttons) lives in a separate panel on the right
+  and never appears inside the phone frame itself. The right panel also has an
   "Assets" section (`_AssetPickerRow`) with one row for the logo and one
   per active cloud sprite slot — the upload button opens the OS/browser's
   native file picker (via the `file_picker` package) so a developer can
@@ -55,40 +55,74 @@ tuned live with sliders before porting it.
   the old vortex-tuning playground, and the standalone curtain-reveal
   prototype (see below).
 - `lib/curtain_overlay.dart` — reusable "theater curtain" reveal
-  (`CurtainOverlay` widget), extracted from `curtain_reveal_demo.dart` so
-  it can sit on top of the real splash's phone frame without duplicating
-  risk into the working demo screen. Two panels split down the middle,
-  each drawing the same full screenshot (`assets/curtain_mock_screenshot.
-  webp`) + fold texture (`assets/curtain_fold_texture.webp`) so the seam
-  lines up; the fold texture fades in first (over `fadeMs`), THEN the
-  panels part along a curved (Bezier) edge (over `durationMs`) whose top
-  moves on a faster curve than the bottom, bowing mid-animation before
-  straightening out. Autoplays on mount, calls `onComplete` once fully
-  open. In `splash_screen.dart`, a "Починати зі штор" checkbox
-  (`_startWithCurtain`) controls whether `CurtainOverlay` is shown on top
-  of the phone frame each time `_playIntro` runs (`_showCurtain`, cleared
-  via `onComplete`) — the cloud-spiral intro underneath plays either way,
-  the curtain (when on) just covers it for the first `fadeMs +
-  durationMs` before removing itself.
+  (`CurtainOverlay` widget + `CurtainClosedFrame`), extracted from
+  `curtain_reveal_demo.dart` so it can sit on top of the real splash's
+  phone frame without duplicating risk into the working demo screen.
+  Two panels split down the middle, each drawing the same full
+  screenshot (`assets/curtain_mock_screenshot.webp` — the Sylpo app
+  mock; deliberately a *different* screenshot from the splash's own
+  `beyond_home_mock.webp`, confirmed intentional, not a bug to "fix") +
+  fold texture (`assets/curtain_fold_texture.webp`) so the seam lines
+  up, along a curved (Bezier) edge whose control point is derived from
+  the top/bottom edge positions.
+  - **`CurtainOverlay(reverse: false)`** (opening): 0→1, panels part;
+    fold texture stays at full opacity throughout.
+  - **`CurtainOverlay(reverse: true)`** (closing, via "To Start" — see
+    below): 1→0, panels rejoin; the fold texture fades OUT (1→0) over
+    the motion instead, so the fabric look dies away as the curtain
+    settles shut rather than snapping back on. `CurtainClosedFrame` (the
+    static resting-closed frame — no clipping/animation needed once
+    fully closed, since there's no seam to hide) deliberately has NO
+    texture layer, matching that faded-out end state — that's what
+    makes the swap from the animating overlay to the static frame
+    invisible instead of a pop.
+  - **Lead/lag physics** (`_topCurve`/`_bottomCurve`): the top edge
+    always *initiates* the motion (leads) and the bottom always
+    *catches up* (lags), in **both** directions — a real curtain's top
+    is pulled by the rail; the loose bottom fabric always trails. Naively
+    reusing the open curves on a reversed controller value flips this
+    (whichever edge finishes fastest also finishes the close first, i.e.
+    the lagging edge would *overtake* the leading one) — the fix
+    re-parametrizes closing as its own `p` = "progress of the current
+    motion" (0→1 regardless of direction) and inverts the curve's
+    *output* (`1 - curve(p)`), not its input, so the same edge leads
+    either way. See the doc comment above `final p = ...` in `build()`
+    before touching this.
+- In `splash_screen.dart`: a "Починати зі штор" checkbox
+  (`_startWithCurtain`) controls whether the curtain is used at all.
+  Three booleans track which of the curtain's three looks is current —
+  `_curtainClosed` (static `CurtainClosedFrame`, resting shut: true from
+  the very first frame, and again once a close finishes), `_showCurtain`
+  (an animating `CurtainOverlay` is mounted right now, opening or
+  closing), `_curtainReverse` (direction of that animation; meaningless
+  while `_showCurtain` is false). "Play Intro" starts an *open* from
+  rest; the "To Start (close curtain)" button (enabled only once
+  `_state == SplashState.done` and the curtain is fully open-and-gone)
+  starts a *close* back to rest, so the whole thing can loop smoothly:
+  closed → (Play Intro) → open/intro/looping/outro → done → (To Start)
+  → closed → …
 - The demo now **opens directly on `SplashState.done`** — just the real
   app's home screen (`assets/beyond_home_mock.webp`), idle, nothing
-  animating — rather than autoplaying the intro. "Play Intro" is what
-  starts the splash from there (same button used to replay it later).
-  `SplashState.done` no longer swaps out the whole screen for a separate
-  full-screen mock either — the phone frame just layers the home-screen
-  image as a static base UNDER `splashContent` (bg/starfield/clouds/logo,
-  all under one `Opacity`) whenever `_state` is `outro` or `done`. Since
-  `sceneOpacity` already eases 1→0 during outro and sits flat at 0 once
-  done, the home screen shows through progressively as the scene fades —
-  a crossfade that falls out of the existing opacity animation rather
-  than a separate abrupt swap. The live-tuning panel (including "Play
-  Intro") stays visible throughout.
+  animating (plus the closed curtain over it, per above) — rather than
+  autoplaying the intro. `SplashState.done` no longer swaps out the
+  whole screen for a separate full-screen mock either — the phone frame
+  just layers the home-screen image as a static base UNDER
+  `splashContent` (bg/starfield/clouds/logo, all under one `Opacity`)
+  whenever `_state` is `outro` or `done`. Since `sceneOpacity` already
+  eases 1→0 during outro and sits flat at 0 once done, the home screen
+  shows through progressively as the scene fades — a crossfade that
+  falls out of the existing opacity animation rather than a separate
+  abrupt swap. The live-tuning panel (including "Play Intro") stays
+  visible throughout.
 - `lib/curtain_reveal_demo.dart` — the standalone prototype screen this
-  was built and tuned in (own copy of the same clipper/panel logic, plus
-  live sliders for Fade/Duration/Arc/Top Lead and an "Open real splash"
-  button). Left as-is/self-contained rather than refactored to share code
-  with `curtain_overlay.dart`, so tuning it further can't regress the
-  version embedded in the real splash.
+  was built and tuned in (own copy of the same clipper/panel logic —
+  open-only, no reverse/close mode — plus live sliders for
+  Fade/Duration/Arc/Top Lead and an "Open real splash" button). Left
+  as-is/self-contained rather than refactored to share code with
+  `curtain_overlay.dart`, so tuning it further can't regress the version
+  embedded in the real splash; the two have already diverged (this one
+  still has the texture fade-*in*-on-open phase that the embedded
+  `CurtainOverlay` dropped).
 - `lib/droste_vortex_painter.dart`, `droste_vortex_config.dart`,
   `spiral_debug_screen.dart`, `checkerboard_painter.dart` — an **earlier,
   now-unused approach** (nested self-similar copies of one spiral image,
@@ -128,7 +162,7 @@ lsof -nP -iTCP:8765 -sTCP:LISTEN
 If something is, `kill -9 <pid>` it first. See "Lessons learned" for why
 this matters.
 
-## Current tuned baseline (2026-09-26)
+## Current tuned baseline (last updated 2026-09-28)
 
 These are the shipped defaults in `splash_screen.dart` — the look the team
 landed on after a long live-tuning session. Change them by editing the
@@ -238,6 +272,22 @@ many particles evenly across the full loop.
 desired opacity. It rendered solid opaque rectangles instead of a fade.
 The reliable fix is `canvas.saveLayer(bounds, Paint()..color =
 Color.fromRGBO(0,0,0,opacity))` around the `drawImageRect` call.
+
+**Reversing an `AnimationController` does not reverse an asymmetric
+lead/lag relationship — it flips it.** `curtain_overlay.dart`'s two
+edges use different curves so one visibly leads the other (a real
+curtain's top, pulled by the rail, always initiates the motion; the
+loose bottom always trails). The first attempt at a "closing" mode just
+called `.reverse()` on the same controller and fed its value straight
+into the same two curves — since whichever curve reaches its target
+*fastest* also, when time runs backward, gets back to its *start*
+fastest, the edge that led while opening ends up trailing while closing
+(and vice versa) instead of leading in both directions. The fix:
+re-parametrize the reverse motion as its own `p` = "progress of the
+current motion" (0→1 regardless of direction) and invert the curve's
+*output* (`1 - curve(p)`), never its input — that keeps the same edge
+leading either way. Worth remembering for *any* two-curve asymmetric
+animation that needs a working reverse, not just this one.
 
 ## Adding new assets
 
