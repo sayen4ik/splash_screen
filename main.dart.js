@@ -8216,8 +8216,9 @@ _.q=1.77
 _.O=20
 _.X=-16
 _.E=86
-_.G=1
-_.M=_.R=0
+_.G=0.5
+_.R=0
+_.M=610
 _.dQ$=i
 _.bk$=j
 _.c=_.a=null},
@@ -43293,7 +43294,7 @@ f.push(A.d1("\u0420\u043e\u0437\u043c\u0456\u0440 \u0437\u043e\u0431\u0440\u0430
 f.push(B.E)
 f.push(A.d1("\u0417\u0441\u0443\u0432 \u0442\u0430\u0439\u0442\u043b\u0430 \u043f\u043e \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u0456","Title X",200,b9,new A.aqk(b4),c0,b4.R))
 f.push(B.E)
-f.push(A.d1("\u0417\u0441\u0443\u0432 \u0442\u0430\u0439\u0442\u043b\u0430 \u043f\u043e \u0432\u0435\u0440\u0442\u0438\u043a\u0430\u043b\u0456","Title Y",200,b9,new A.aql(b4),c0,b4.M))
+f.push(A.d1("\u0417\u0441\u0443\u0432 \u0442\u0430\u0439\u0442\u043b\u0430 \u043f\u043e \u0432\u0435\u0440\u0442\u0438\u043a\u0430\u043b\u0456","Title Y",700,b9,new A.aql(b4),c0,b4.M))
 f.push(B.ln)
 f.push(B.UR)
 f.push(B.lo)
@@ -43418,7 +43419,7 @@ if(c3!=null){c4=c3
 e3.a.R=J.cE(c4,e4,200)}c5=e5.$1("titleY")
 c6=null
 if(c5!=null){c6=c5
-e3.a.M=J.cE(c6,e4,200)}e1=e3.c
+e3.a.M=J.cE(c6,e4,700)}e1=e3.c
 c7=e1.$1("bgTop")
 c8=null
 if(c7!=null){c8=c7
