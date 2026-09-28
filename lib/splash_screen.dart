@@ -599,10 +599,6 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
       _ => _globalZoom,
     };
 
-    if (_state == SplashState.done) {
-      return _MainAppMock(onReplay: _playIntro);
-    }
-
     // The splash itself is rendered at a fixed phone-sized canvas (not the
     // browser window) so what's shown on the left is an accurate preview of
     // how it'll actually look on a phone screen — this is a dev-facing demo
@@ -766,19 +762,34 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(40),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                splashContent,
-                                if (_showCurtain)
-                                  CurtainOverlay(
-                                    width: _phoneWidth,
-                                    height: _phoneHeight,
-                                    onComplete: () =>
-                                        setState(() => _showCurtain = false),
+                            // Once the outro finishes, the splash's own
+                            // opacity fades to 0 (see `sceneOpacity`
+                            // above) — rather than fading to nothing, we
+                            // swap in the real app's home screen, so the
+                            // phone frame reads as "the app finished
+                            // loading" instead of just going blank. The
+                            // controls panel stays put either way (no
+                            // separate full-screen mock replacing it
+                            // anymore), so replaying is just "Play Intro".
+                            child: _state == SplashState.done
+                                ? Image.asset(
+                                    'assets/beyond_home_mock.webp',
+                                    fit: BoxFit.cover,
+                                  )
+                                : Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      splashContent,
+                                      if (_showCurtain)
+                                        CurtainOverlay(
+                                          width: _phoneWidth,
+                                          height: _phoneHeight,
+                                          onComplete: () => setState(
+                                            () => _showCurtain = false,
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                              ],
-                            ),
                           ),
                         ),
                       ),
@@ -1576,35 +1587,3 @@ class _LabeledSlider extends StatelessWidget {
   }
 }
 
-class _MainAppMock extends StatelessWidget {
-  const _MainAppMock({required this.onReplay});
-
-  final VoidCallback onReplay;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF16161C),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Main App Screen',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton(
-              onPressed: onReplay,
-              child: const Text('Replay splash'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

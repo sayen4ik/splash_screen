@@ -84,6 +84,7 @@ flutter:
     - assets/cloud_blob_18.webp
     - assets/curtain_mock_screenshot.webp
     - assets/curtain_fold_texture.webp
+    - assets/beyond_home_mock.webp
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
