@@ -104,10 +104,10 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   // fade is at each end are tunable.
   Color _bgTopColor = const Color(0xFF07020D);
   Color _bgBottomColor = const Color(0xFF22065A);
-  Color _fgTopColor = const Color(0xFFE6BAFF);
-  Color _fgBottomColor = const Color(0xFFE6BAFF);
+  Color _fgTopColor = const Color(0xFF100C23);
+  Color _fgBottomColor = const Color(0xFF100C23);
   double _fgTopOpacity = 0.0;
-  double _fgBottomOpacity = 55.0;
+  double _fgBottomOpacity = 19.0;
 
   /// Where the foreground gradient's *top* stop sits, as a 0..1 fraction
   /// of the screen from the top — the bottom stop always stays pinned at
@@ -116,7 +116,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// color holds solid over more of the upper screen before the blend
   /// into FG Bottom starts. 0.0 = old behavior (transition spans the
   /// full screen top-to-bottom).
-  double _fgTopStop = 0.26;
+  double _fgTopStop = 0.66;
   late final TextEditingController _bgTopHexController;
   late final TextEditingController _bgBottomHexController;
   late final TextEditingController _fgTopHexController;
@@ -171,14 +171,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// Live size knob for the *outer* (far/near-camera) clouds — the ones
   /// that have traveled furthest from the logo tip, i.e. how big puffs get
   /// once they've scaled all the way out. Shown in the UI as "Scale Out".
-  double _sizeMultiplier = 2.26;
+  double _sizeMultiplier = 3.62;
 
   /// Live size knob for the clouds right at the logo tip (spawn size), i.e.
   /// how big puffs are the moment they scale in from the logo. Shown in the
   /// UI as "Scale In". Together with `_sizeMultiplier` ("Scale Out") this
   /// sets how much clouds grow over their trip out — a bigger gap between
   /// the two reads as puffs visibly ballooning outward as they travel.
-  double _startSizeMultiplier = 2.55;
+  double _startSizeMultiplier = 1.35;
 
   /// Where (0..1, along life-progress `p`) a puff sits exactly halfway
   /// between Scale In and Scale Out in size. 0.5 = old plain-linear growth.
@@ -215,14 +215,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// r(p) curve's outer end is unaffected — see [CloudSpiralPainter]),
   /// useful when the innermost turn is landing on top of the logo instead
   /// of wrapping around it. Shown in the UI as "Inner Radius".
-  double _innerRadiusMultiplier = 1.95;
+  double _innerRadiusMultiplier = 1.52;
 
   /// Live power curve on a puff's real-time pacing based on where it is
   /// along its own life. 1.0 = uniform (old behavior). Above 1.0, puffs
   /// near the logo move slowly and accelerate as they travel outward —
   /// "closer/outer puffs move faster, ones near the logo move slower".
   /// Shown in the UI as "Depth Speed".
-  double _depthSpeedPower = 1.5;
+  double _depthSpeedPower = 1.23;
 
   /// Live overall zoom: scales the whole composition (spiral + logo)
   /// together around screen center, on top of every other knob above —
@@ -250,14 +250,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// through it. Applied *before* the zoom/rotation transform above, so it
   /// scales/rotates along with everything else rather than fighting it.
   /// Shown in the UI as "Spawn X"/"Spawn Y".
-  double _spawnOffsetX = 2.0;
-  double _spawnOffsetY = 7.0;
+  double _spawnOffsetX = 6.0;
+  double _spawnOffsetY = -3.0;
 
   /// Live size knob for the logo itself, independent of `_globalZoom` (which
   /// scales spiral + logo together) and the intro's own pop-in animation
   /// (which multiplies on top of this) — 1.0 = the base 90x90 box. Shown in
   /// the UI as "Logo Scale".
-  double _logoScale = 2.55;
+  double _logoScale = 1.85;
 
   /// Pixel offset (from the phone-frame canvas' own center) of the logo
   /// itself — unlike `_spawnOffsetX`/`_spawnOffsetY` (which move the
@@ -266,7 +266,12 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// with everything else rather than fighting it. Shown in the UI as
   /// "Logo X"/"Logo Y".
   double _logoOffsetX = 18.0;
-  double _logoOffsetY = -34.0;
+  double _logoOffsetY = -16.0;
+
+  /// Live opacity knob (0-100%) for the logo image itself — independent of
+  /// `sceneOpacity` (which fades the *whole* scene in/out for intro/outro).
+  /// Shown in the UI as "Logo Opacity".
+  double _logoOpacity = 100.0;
 
   /// Cloud sprite variants to pick from — add more paths here (and to
   /// pubspec.yaml's assets list) to have particles randomly (but stably,
@@ -371,6 +376,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     'logoScale': _logoScale,
     'logoX': _logoOffsetX,
     'logoY': _logoOffsetY,
+    'logoOpacity': _logoOpacity,
     'bgTop': _colorToHex(_bgTopColor),
     'bgBottom': _colorToHex(_bgBottomColor),
     'fgTop': _colorToHex(_fgTopColor),
@@ -473,6 +479,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         }
         if (asDouble('logoY') case final v?) {
           _logoOffsetY = v.clamp(-200, 200);
+        }
+        if (asDouble('logoOpacity') case final v?) {
+          _logoOpacity = v.clamp(0, 100);
         }
         if (asColor('bgTop') case final c?) {
           _bgTopColor = c;
@@ -768,15 +777,18 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                               angle: logoRotationRad,
                               child: Transform.scale(
                                 scale: logoScale * _logoScale,
-                                child: SizedBox(
-                                  width: 90,
-                                  height: 90,
-                                  child: _customLogoBytes != null
-                                      ? Image.memory(
-                                          _customLogoBytes!,
-                                          fit: BoxFit.contain,
-                                        )
-                                      : Image.asset('assets/logo.png'),
+                                child: Opacity(
+                                  opacity: _logoOpacity / 100,
+                                  child: SizedBox(
+                                    width: 90,
+                                    height: 90,
+                                    child: _customLogoBytes != null
+                                        ? Image.memory(
+                                            _customLogoBytes!,
+                                            fit: BoxFit.contain,
+                                          )
+                                        : Image.asset('assets/logo.png'),
+                                  ),
                                 ),
                               ),
                             ),
@@ -1280,6 +1292,17 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                           description: 'Зсув логотипа по вертикалі',
                           onChanged: (v) =>
                               setState(() => _logoOffsetY = v),
+                        ),
+                        const SizedBox(height: 8),
+                        _LabeledSlider(
+                          label: 'Logo Opacity',
+                          value: _logoOpacity,
+                          min: 0,
+                          max: 100,
+                          unit: '%',
+                          description: 'Прозорість логотипа',
+                          onChanged: (v) =>
+                              setState(() => _logoOpacity = v),
                         ),
                         const SizedBox(height: 20),
                         const Text(

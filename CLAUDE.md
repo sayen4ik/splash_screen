@@ -204,8 +204,8 @@ save it back (the slider only changes runtime state, not the source).
 | Field | Value | UI label | What it does |
 |---|---|---|---|
 | `_speedMultiplier` | 0.0303 | Speed | Loop flow speed |
-| `_sizeMultiplier` | 2.26 | Scale Out | Cloud size at the outer edge |
-| `_startSizeMultiplier` | 2.55 | Scale In | Cloud size at the logo tip (spawn) |
+| `_sizeMultiplier` | 3.62 | Scale Out | Cloud size at the outer edge |
+| `_startSizeMultiplier` | 1.35 | Scale In | Cloud size at the logo tip (spawn) |
 | `_sizeMidpoint` | 0.5 | Scale Mid | Where (0..1 along `p`) a puff is exactly halfway between Scale In and Scale Out in size — 0.5 is the old plain-linear growth; push toward 0/1 to shift when the size-up happens |
 | `_particleCount` | 40 | Count | Base puff count |
 | `_particleSpacing` | 1.3 | Spacing | Density (higher = sparser) |
@@ -213,16 +213,17 @@ save it back (the slider only changes runtime state, not the source).
 | `_tiltAngleDeg` | -39.0 | Tilt | Tilt axis of the squash |
 | `_turnsMultiplier` | 2.76 | Turns | How many turns the spiral winds |
 | `_reachMultiplier` | 2.55 | Reach | How far out the spiral reaches |
-| `_innerRadiusMultiplier` | 1.95 | Inner R | Radius of the spiral's very first turn (where puffs spawn) — raise it so the first turn wraps around the logo instead of landing on top of it; the outer end of the radius curve is unaffected |
-| `_depthSpeedPower` | 1.5 | Depth Spd | Power curve on a puff's real-time pacing (see `CloudSpiralPainter.paint`'s `pRaw`→`p` remap) — above 1.0, puffs near the logo move slowly and accelerate outward (near/far parallax), with a bunching-near-the-tip side effect since puffs stay evenly staggered in raw time |
+| `_innerRadiusMultiplier` | 1.52 | Inner R | Radius of the spiral's very first turn (where puffs spawn) — raise it so the first turn wraps around the logo instead of landing on top of it; the outer end of the radius curve is unaffected |
+| `_depthSpeedPower` | 1.23 | Depth Spd | Power curve on a puff's real-time pacing (see `CloudSpiralPainter.paint`'s `pRaw`→`p` remap) — above 1.0, puffs near the logo move slowly and accelerate outward (near/far parallax), with a bunching-near-the-tip side effect since puffs stay evenly staggered in raw time |
 | `_globalZoom` | 1.91 | Zoom | Overall zoom of spiral+logo together |
 | `_fillAmount` | 100.0 | Fill | % of the spiral populated with clouds (intro wipes 0→100) |
 | `_rotationDeg` | 0.0 | Rotate | Overall rotation of spiral+logo together |
-| `_spawnOffsetX` | 2.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
-| `_spawnOffsetY` | 7.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
-| `_logoScale` | 2.55 | Logo Scale | Size of the logo itself, independent of `_globalZoom` (which scales spiral + logo together) and the intro's own pop-in animation (multiplies on top of this) |
+| `_spawnOffsetX` | 6.0 | Spawn X | Pixel offset of the spiral's own spawn point, horizontal — the logo itself always stays dead center |
+| `_spawnOffsetY` | -3.0 | Spawn Y | Pixel offset of the spiral's own spawn point, vertical — the logo itself always stays dead center |
+| `_logoScale` | 1.85 | Logo Scale | Size of the logo itself, independent of `_globalZoom` (which scales spiral + logo together) and the intro's own pop-in animation (multiplies on top of this) |
 | `_logoOffsetX` | 18.0 | Logo X | Pixel offset of the logo image itself, horizontal — unlike Spawn X (which only moves the spiral's spawn point), this moves the logo |
-| `_logoOffsetY` | -34.0 | Logo Y | Pixel offset of the logo image itself, vertical — unlike Spawn Y (which only moves the spiral's spawn point), this moves the logo |
+| `_logoOffsetY` | -16.0 | Logo Y | Pixel offset of the logo image itself, vertical — unlike Spawn Y (which only moves the spiral's spawn point), this moves the logo |
+| `_logoOpacity` | 100.0 | Logo Opacity | Opacity (0-100%) of the logo image itself, independent of `sceneOpacity` (which fades the whole scene for intro/outro) |
 
 The "Colors" section at the top of the right panel has 4 hex color rows
 (`RRGGBB`, no `#`, each next to a live swatch — an invalid hex is just
@@ -233,12 +234,12 @@ ignored, leaving the previous color in place):
   everything, always fully opaque (no opacity knob — it's the solid base
   of the whole scene).
 - **FG Top** / **FG Bottom** (`_fgTopColor`/`_fgBottomColor`, default
-  `#E6BAFF`/`#E6BAFF`) — the cosmetic tint drawn *over* the whole scene
+  `#100C23`/`#100C23`) — the cosmetic tint drawn *over* the whole scene
   (above clouds/logo, below the debug UI), also top color → bottom
   color, but each end additionally has its own live opacity slider
-  (`_fgTopOpacity`/`_fgBottomOpacity`, 0–100%, default 0%/55%) — unlike
+  (`_fgTopOpacity`/`_fgBottomOpacity`, 0–100%, default 0%/19%) — unlike
   the background, both hue *and* fade strength are tunable per end here.
-  A "FG Top Pos" slider (`_fgTopStop`, 0–95%, default 26%) additionally
+  A "FG Top Pos" slider (`_fgTopStop`, 0–95%, default 66%) additionally
   moves the gradient's *top* stop position down toward the bottom — the
   bottom stop always stays pinned at 1.0 (the very bottom of the
   screen); raising it holds FG Top solid over more of the upper screen
@@ -246,7 +247,8 @@ ignored, leaving the previous color in place):
 
 All 7 values are included in "Share params" (`bgTop`/`bgBottom`/`fgTop`/
 `fgBottom` as hex strings, `fgTopOpacity`/`fgBottomOpacity`/`fgTopStop`
-as numbers) alongside every slider, including `logoScale`/`logoX`/`logoY`.
+as numbers) alongside every slider, including
+`logoScale`/`logoX`/`logoY`/`logoOpacity`.
 
 Intro (~1.5s): Fill 0→100%, Rotate 70°→0°, Zoom 1.0→baseline, speed decays
 from 7x, logo scales in with a slight tilt (35°→0°) — all eased with
