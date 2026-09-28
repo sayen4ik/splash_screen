@@ -216,7 +216,7 @@ save it back (the slider only changes runtime state, not the source).
 | `_sizeMidpoint` | 0.5 | Scale Mid | Where (0..1 along `p`) a puff is exactly halfway between Scale In and Scale Out in size — 0.5 is the old plain-linear growth; push toward 0/1 to shift when the size-up happens |
 | `_particleCount` | 40 | Count | Base puff count |
 | `_particleSpacing` | 1.3 | Spacing | Density (higher = sparser) |
-| `_squashFactor` | 0.7235 | Squash | Ellipse squash of the spiral |
+| `_squashFactor` | 0.7935 | Squash | Ellipse squash of the spiral |
 | `_tiltAngleDeg` | -39.0 | Tilt | Tilt axis of the squash |
 | `_turnsMultiplier` | 2.76 | Turns | How many turns the spiral winds |
 | `_reachMultiplier` | 2.55 | Reach | How far out the spiral reaches |

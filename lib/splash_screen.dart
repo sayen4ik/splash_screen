@@ -202,7 +202,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
   /// Live ellipse-squash knob (1.0 = perfect circle, less = flatter oval),
   /// for the tilted-tunnel "distort" look.
-  double _squashFactor = 0.7235;
+  double _squashFactor = 0.7935;
 
   /// Live tilt angle (degrees) of the squash axis.
   double _tiltAngleDeg = -39.0;
