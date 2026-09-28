@@ -61,6 +61,15 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   static const _introLogoTiltDeg = 35.0;
   static const _introRotationStartDeg = 70.0;
 
+  // Below this body width the desktop side-by-side layout (fixed phone +
+  // fixed 360px controls column) no longer fits without squeezing the
+  // phone preview down to unusable — so narrower viewports (real phones
+  // previewing the splash on themselves) switch to a full-bleed phone
+  // preview with the controls collapsed into a slide-out overlay panel
+  // instead, toggled via `_controlsPanelOpen`.
+  static const _mobileBreakpoint = 700.0;
+  bool _controlsPanelOpen = false;
+
   List<ui.Image>? _cloudImages;
 
   // Uploaded replacements for the logo and the 3 cloud sprite slots — set
@@ -774,15 +783,10 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     // controls (sliders, state, triggers) live in the panel on the right,
     // entirely outside the phone frame, so they never show up "in" the
     // splash itself.
-    return Scaffold(
-      backgroundColor: const Color(0xFF16161C),
-      body: Row(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: Center(
+    final phoneArea = Column(
+      children: [
+        Expanded(
+          child: Center(
                     child: FittedBox(
                       fit: BoxFit.contain,
                       child: SizedBox(
@@ -860,13 +864,8 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                   ),
                 ),
               ],
-            ),
-          ),
-          Container(
-            width: 360,
-            color: const Color(0xFF14101C),
-            padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
-            child: Column(
+            );
+    final controlsPanel = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
@@ -1285,13 +1284,14 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
                   children: [
                     OutlinedButton(
                       onPressed: _playIntro,
                       child: const Text('Play Intro'),
                     ),
-                    const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: _state == SplashState.looping
                           ? _triggerExit
@@ -1316,9 +1316,171 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                   child: const Text('To Start (close curtain)'),
                 ),
               ],
+            );
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF16161C),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < _mobileBreakpoint;
+          if (!isMobile) {
+            return Row(
+              children: [
+                Expanded(child: phoneArea),
+                Container(
+                  width: 360,
+                  color: const Color(0xFF14101C),
+                  padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+                  child: controlsPanel,
+                ),
+              ],
+            );
+          }
+          // Mobile: the phone preview fills the whole viewport (this is
+          // what a real device opening the splash sees), the sliders
+          // collapse into a slide-out panel toggled by the arrow handle
+          // (same idea as Rive's own inspector), semi-transparent so the
+          // canvas keeps showing through while tuning, and the two
+          // most-used triggers (Play Intro / Trigger App Loaded) sit in a
+          // bar fixed to the bottom of the screen so they're reachable
+          // and their effect is visible without opening the panel first.
+          final panelWidth = math.min(320.0, constraints.maxWidth * 0.86);
+          return Stack(
+            children: [
+              Positioned.fill(child: phoneArea),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _MobileTriggerBar(
+                  onPlayIntro: _playIntro,
+                  onTriggerExit:
+                      _state == SplashState.looping ? _triggerExit : null,
+                  onCloseCurtain:
+                      (_state == SplashState.done &&
+                          _startWithCurtain &&
+                          !_curtainClosed &&
+                          !_showCurtain)
+                      ? _closeCurtain
+                      : null,
+                ),
+              ),
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                top: 0,
+                bottom: 0,
+                left: _controlsPanelOpen ? 0 : -panelWidth,
+                width: panelWidth,
+                child: Container(
+                  color: const Color(0xFF14101C).withValues(alpha: 0.7),
+                  padding: const EdgeInsets.fromLTRB(16, 56, 16, 16),
+                  child: controlsPanel,
+                ),
+              ),
+              Positioned(
+                top: 12,
+                left: 12,
+                child: _PanelToggleButton(
+                  open: _controlsPanelOpen,
+                  onTap: () => setState(
+                    () => _controlsPanelOpen = !_controlsPanelOpen,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _MobileTriggerBar extends StatelessWidget {
+  const _MobileTriggerBar({
+    required this.onPlayIntro,
+    required this.onTriggerExit,
+    required this.onCloseCurtain,
+  });
+
+  final VoidCallback onPlayIntro;
+  final VoidCallback? onTriggerExit;
+  final VoidCallback? onCloseCurtain;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFF14101C).withValues(alpha: 0.92),
+      padding: EdgeInsets.fromLTRB(
+        12,
+        10,
+        12,
+        10 + MediaQuery.of(context).padding.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onPlayIntro,
+                  child: const Text('Play Intro'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onTriggerExit,
+                  child: const Text('Trigger App Loaded'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: onCloseCurtain,
+              child: const Text('To Start (close curtain)'),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The arrow handle that slides the mobile controls panel in/out — always
+/// pinned to the same top-left spot (drawn after the panel in the `Stack`
+/// so it stays on top and reachable either way), rotating to point the
+/// opposite direction once the panel is open.
+class _PanelToggleButton extends StatelessWidget {
+  const _PanelToggleButton({required this.open, required this.onTap});
+
+  final bool open;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withValues(alpha: 0.55),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: AnimatedRotation(
+            duration: const Duration(milliseconds: 250),
+            turns: open ? 0.5 : 0,
+            child: const Icon(
+              Icons.chevron_right,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+        ),
       ),
     );
   }

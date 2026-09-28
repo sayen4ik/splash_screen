@@ -22,7 +22,34 @@ tuned live with sliders before porting it.
   so it's an accurate, device-shaped preview to show a developer — not the
   raw browser-window canvas. All debug UI (state badge, sliders, Play
   Intro/Trigger/To Start buttons) lives in a separate panel on the right
-  and never appears inside the phone frame itself. The right panel also has an
+  and never appears inside the phone frame itself.
+  **Responsive layout:** `build()` splits the phone frame (`phoneArea`) and
+  the sidebar contents (`controlsPanel`) into local variables, then a
+  `LayoutBuilder` picks between two arrangements at `_mobileBreakpoint`
+  (700px): **wide** — the original fixed `Row` (phone + a fixed 360px
+  `controlsPanel` column), unchanged. **narrow** (real phones opening this
+  demo on themselves, where a fixed 360px sidebar would crush the phone
+  preview) — a `Stack`: `phoneArea` fills the whole viewport,
+  `_MobileTriggerBar` pins just the two most-used triggers (Play Intro /
+  Trigger App Loaded) to the bottom so they're reachable and their effect
+  is visible without opening anything, `controlsPanel` (same widget as the
+  desktop sidebar, not a fork of it) slides in from the left inside an
+  `AnimatedPositioned` at up to 320px wide with a semi-transparent
+  background (so the canvas keeps showing through while tuning sliders —
+  same idea as Rive's own inspector panel), and `_PanelToggleButton` (a
+  small circular arrow, top-left, rotates 180° when open) toggles
+  `_controlsPanelOpen`. Because `controlsPanel` is reused verbatim between
+  both layouts, any new control added to the sidebar automatically shows
+  up on mobile too — don't wrap it in a second `SingleChildScrollView`
+  when embedding it (it already has its own internal `Expanded` +
+  scrollview for the slider section; double-wrapping it in another
+  scrollview throws "RenderFlex children have non-zero flex but incoming
+  height constraints are unbounded" because the inner `Expanded` no longer
+  has a bounded parent). The row of trigger buttons inside `controlsPanel`
+  uses `Wrap` rather than `Row` specifically so it doesn't overflow at the
+  mobile panel's narrower width (320px minus padding) even though it fits
+  fine in the desktop sidebar's 360px.
+  The right panel also has an
   "Assets" section (`_AssetPickerRow`) with one row for the logo and one
   per active cloud sprite slot — the upload button opens the OS/browser's
   native file picker (via the `file_picker` package) so a developer can
