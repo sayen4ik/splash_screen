@@ -62,7 +62,8 @@ tuned live with sliders before porting it.
   (`_cloudRotationDeg`, −180..180°) that spins that sprite on top of its
   tangent-aligned rotation along the spiral
   (`CloudSpiralPainter.imageRotationsRad`). Both travel in "Share params"
-  as `cloudOn`/`cloudRotate` lists. Uploaded images are session-only (kept in memory as
+  as `cloudOn`/`cloudRotate` lists. Default since 2026-10-03: only Cloud 1
+  on, all rotations 0°. Uploaded images are session-only (kept in memory as
   `_customLogoBytes`/`_customCloudImages`), never written to `assets/` or
   `pubspec.yaml` — swapping in a new *permanent* default still means adding
   the file and updating `_cloudAssetPaths`/`assets/logo.png` as before.
@@ -226,7 +227,7 @@ cd - && git worktree remove /tmp/splash_gh_pages
 The `--base-href /splash_screen/` matters — without it the page loads
 blank on Pages, since assets are requested from the domain root.
 
-## Current tuned baseline (last updated 2026-09-28)
+## Current tuned baseline (last updated 2026-10-03)
 
 These are the shipped defaults in `splash_screen.dart` — the look the team
 landed on after a long live-tuning session. Change them by editing the
@@ -240,7 +241,7 @@ save it back (the slider only changes runtime state, not the source).
 | `_startSizeMultiplier` | 1.35 | Scale In | Cloud size at the logo tip (spawn) |
 | `_sizeMidpoint` | 0.5 | Scale Mid | Where (0..1 along `p`) a puff is exactly halfway between Scale In and Scale Out in size — 0.5 is the old plain-linear growth; push toward 0/1 to shift when the size-up happens |
 | `_particleCount` | 40 | Count | Base puff count |
-| `_particleSpacing` | 1.3 | Spacing | Density (higher = sparser) |
+| `_particleSpacing` | 2.05 | Spacing | Density (higher = sparser) |
 | `_squashFactor` | 0.7935 | Squash | Ellipse squash of the spiral |
 | `_tiltAngleDeg` | -39.0 | Tilt | Tilt axis of the squash |
 | `_turnsMultiplier` | 2.76 | Turns | How many turns the spiral winds |
@@ -256,9 +257,9 @@ save it back (the slider only changes runtime state, not the source).
 | `_logoOffsetX` | 20.0 | Logo X | Pixel offset of the logo image itself, horizontal — unlike Spawn X (which only moves the spiral's spawn point), this moves the logo |
 | `_logoOffsetY` | -16.0 | Logo Y | Pixel offset of the logo image itself, vertical — unlike Spawn Y (which only moves the spiral's spawn point), this moves the logo |
 | `_logoOpacity` | 86.0 | Logo Opacity | Opacity (0-100%) of the logo image itself, independent of `sceneOpacity` (which fades the whole scene for intro/outro) |
-| `_titleScale` | 1.0 | Title Scale | Size of the title wordmark (`assets/title.png`), pinned near the top of the screen — outside the spiral's zoom/rotation group, so it never spins with the composition |
+| `_titleScale` | 0.5 | Title Scale | Size of the title wordmark (`assets/title.png`), pinned near the top of the screen — outside the spiral's zoom/rotation group, so it never spins with the composition |
 | `_titleOffsetX` | 0.0 | Title X | Pixel offset of the title wordmark from its default top-center anchor, horizontal |
-| `_titleOffsetY` | 0.0 | Title Y | Pixel offset of the title wordmark from its default top-center anchor, vertical |
+| `_titleOffsetY` | 610.0 | Title Y | Pixel offset of the title wordmark from its default top-center anchor, vertical |
 
 The "Colors" section at the top of the right panel has 4 hex color rows
 (`RRGGBB`, no `#`, each next to a live swatch — an invalid hex is just

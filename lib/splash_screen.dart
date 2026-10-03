@@ -85,7 +85,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// left out of the painter's sprite mix entirely, so 1, 2 or all 3 cloud
   /// variants can be compared. At least one always stays on (the last
   /// checked box is disabled), since the painter needs a sprite to draw.
-  final List<bool> _cloudEnabled = List<bool>.filled(3, true);
+  final List<bool> _cloudEnabled = [true, false, false];
 
   /// Per-slot extra rotation (degrees) of that cloud sprite, on top of its
   /// tangent-aligned rotation along the spiral — see
@@ -209,7 +209,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
 
   /// Live knob for how far apart consecutive puffs sit along the spiral
   /// (1.0 = evenly fills the whole loop, as before).
-  double _particleSpacing = 1.3;
+  double _particleSpacing = 2.05;
 
   /// Live ellipse-squash knob (1.0 = perfect circle, less = flatter oval),
   /// for the tilted-tunnel "distort" look.
