@@ -307,7 +307,7 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   /// in order (A, B, C, A, B, C…, see [CloudSpiralPainter]) between several
   /// cloud shapes instead of stamping the same one everywhere.
   static const _cloudAssetPaths = [
-    'assets/cloud_blob_19.webp',
+    'assets/cloud_blob_20.webp',
     'assets/cloud_blob_19.webp',
     'assets/cloud_blob_19.webp',
   ];

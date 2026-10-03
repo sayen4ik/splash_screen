@@ -175,9 +175,10 @@ tuned live with sliders before porting it.
   sets kept in case of reverting. Multiple images in `_cloudAssetPaths` (the
   enabled ones) strictly alternate in order along the spiral — A, B, A, B…
   (was a random per-particle mix before 2026-10-03). As of
-  2026-09-28 all three active slots point at the same new sprite,
-  `assets/cloud_blob_19.webp` (a placeholder — "all three clouds like this
-  for now" per the team) rather than three distinct variants.
+  2026-10-03 slot 1 is `assets/cloud_blob_20.webp` (the team's chosen
+  cloud, from `cloud-1-new.png` on the shared Drive) and is the only slot
+  enabled by default; slots 2–3 still hold the older placeholder
+  `cloud_blob_19.webp`, unchecked.
 - `assets/stars_bg.png` — static starfield background. Drawn once, full
   screen (`BoxFit.cover`, centered), above the base gradient but below the
   spiral/logo — it never animates and is unaffected by the zoom/rotation
