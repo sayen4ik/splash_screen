@@ -24,6 +24,10 @@ slider panel before porting the final look into the real app.
   together) zooms in dramatically while the scene fades, like diving
   through the vortex.
 
+Cloud sprites: up to 3 variants, each with its own on/off checkbox and
+rotation slider in the panel; enabled variants strictly alternate along
+the spiral (1, 2, 1, 2… or 1, 2, 3, 1, 2, 3…).
+
 Every visual parameter (cloud size, density, spiral tightness, tilt,
 overall zoom/rotation, how much of the spiral is filled, etc.) is a live
 slider in the demo screen, so the look can be tuned by eye rather than by

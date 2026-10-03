@@ -81,6 +81,17 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   final List<Uint8List?> _customCloudBytes = List<Uint8List?>.filled(3, null);
   final List<ui.Image?> _customCloudImages = List<ui.Image?>.filled(3, null);
 
+  /// Per-slot on/off checkbox in the "Assets" panel — unchecked slots are
+  /// left out of the painter's sprite mix entirely, so 1, 2 or all 3 cloud
+  /// variants can be compared. At least one always stays on (the last
+  /// checked box is disabled), since the painter needs a sprite to draw.
+  final List<bool> _cloudEnabled = List<bool>.filled(3, true);
+
+  /// Per-slot extra rotation (degrees) of that cloud sprite, on top of its
+  /// tangent-aligned rotation along the spiral — see
+  /// [CloudSpiralPainter.imageRotationsRad].
+  final List<double> _cloudRotationDeg = List<double>.filled(3, 0.0);
+
   /// Same "session-only, `null` = bundled default" pattern as the logo/cloud
   /// slots above, for the static starfield background (`assets/stars_bg.png`).
   /// Only needs raw bytes (drawn via `Image.memory`, not the raw-canvas
@@ -292,9 +303,9 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
   double _titleOffsetY = 610.0;
 
   /// Cloud sprite variants to pick from — add more paths here (and to
-  /// pubspec.yaml's assets list) to have particles randomly (but stably,
-  /// see [CloudSpiralPainter]) mix between several cloud shapes instead of
-  /// stamping the same one everywhere.
+  /// pubspec.yaml's assets list) to have consecutive puffs alternate
+  /// in order (A, B, C, A, B, C…, see [CloudSpiralPainter]) between several
+  /// cloud shapes instead of stamping the same one everywhere.
   static const _cloudAssetPaths = [
     'assets/cloud_blob_19.webp',
     'assets/cloud_blob_19.webp',
@@ -405,6 +416,8 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
     'fgTopOpacity': _fgTopOpacity,
     'fgBottomOpacity': _fgBottomOpacity,
     'fgTopStop': _fgTopStop,
+    'cloudOn': _cloudEnabled,
+    'cloudRotate': _cloudRotationDeg,
   };
 
   String _encodeConfig() =>
@@ -537,6 +550,20 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
         }
         if (asDouble('fgTopStop') case final v?) {
           _fgTopStop = v.clamp(0.0, 0.95);
+        }
+        if (decoded['cloudOn'] case final List list
+            when list.whereType<bool>().contains(true)) {
+          for (var i = 0; i < _cloudEnabled.length && i < list.length; i++) {
+            if (list[i] case final bool on) _cloudEnabled[i] = on;
+          }
+          if (!_cloudEnabled.contains(true)) _cloudEnabled[0] = true;
+        }
+        if (decoded['cloudRotate'] case final List list) {
+          for (var i = 0; i < _cloudRotationDeg.length && i < list.length; i++) {
+            if (list[i] case final num n) {
+              _cloudRotationDeg[i] = n.toDouble().clamp(-180, 180);
+            }
+          }
         }
         _configApplyError = null;
       });
@@ -789,7 +816,13 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                             painter: CloudSpiralPainter(
                               images: [
                                 for (var i = 0; i < _cloudImages!.length; i++)
-                                  _customCloudImages[i] ?? _cloudImages![i],
+                                  if (_cloudEnabled[i])
+                                    _customCloudImages[i] ?? _cloudImages![i],
+                              ],
+                              imageRotationsRad: [
+                                for (var i = 0; i < _cloudImages!.length; i++)
+                                  if (_cloudEnabled[i])
+                                    _cloudRotationDeg[i] * math.pi / 180,
                               ],
                               config: _config,
                               timeSeconds: _spiralTimeSec,
@@ -1107,7 +1140,29 @@ class _SplashDemoScreenState extends State<SplashDemoScreen>
                             onReset: _customCloudBytes[i] != null
                                 ? () => _resetCloud(i)
                                 : null,
+                            enabled: _cloudEnabled[i],
+                            // The last checked slot can't be unchecked —
+                            // the painter always needs at least one sprite.
+                            onEnabledChanged:
+                                _cloudEnabled[i] &&
+                                    _cloudEnabled.where((on) => on).length == 1
+                                ? null
+                                : (on) => setState(() => _cloudEnabled[i] = on),
                           ),
+                          if (_cloudEnabled[i]) ...[
+                            const SizedBox(height: 4),
+                            _LabeledSlider(
+                              label: 'Rotate ${i + 1}',
+                              value: _cloudRotationDeg[i],
+                              min: -180,
+                              max: 180,
+                              unit: '°',
+                              description:
+                                  'Поворот зображення хмари ${i + 1} відносно її напрямку руху по спіралі',
+                              onChanged: (v) =>
+                                  setState(() => _cloudRotationDeg[i] = v),
+                            ),
+                          ],
                           const SizedBox(height: 8),
                         ],
                         _AssetPickerRow(
@@ -1886,12 +1941,20 @@ class _AssetPickerRow extends StatelessWidget {
     required this.preview,
     required this.onPick,
     this.onReset,
+    this.enabled,
+    this.onEnabledChanged,
   });
 
   final String label;
   final Widget preview;
   final VoidCallback onPick;
   final VoidCallback? onReset;
+
+  /// When non-null, a checkbox is shown at the start of the row (used by the
+  /// cloud slots to switch a sprite in/out of the mix). [onEnabledChanged]
+  /// `null` shows the checkbox greyed out / locked.
+  final bool? enabled;
+  final ValueChanged<bool>? onEnabledChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1904,13 +1967,25 @@ class _AssetPickerRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
-              width: 36,
-              height: 36,
-              color: Colors.white10,
-              child: preview,
+          if (enabled != null)
+            Checkbox(
+              value: enabled,
+              visualDensity: VisualDensity.compact,
+              side: const BorderSide(color: Colors.white54),
+              onChanged: onEnabledChanged == null
+                  ? null
+                  : (v) => onEnabledChanged!(v ?? false),
+            ),
+          Opacity(
+            opacity: enabled == false ? 0.35 : 1.0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                width: 36,
+                height: 36,
+                color: Colors.white10,
+                child: preview,
+              ),
             ),
           ),
           const SizedBox(width: 10),

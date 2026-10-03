@@ -55,7 +55,14 @@ tuned live with sliders before porting it.
   native file picker (via the `file_picker` package) so a developer can
   preview their own art without touching code; a row's reset button (only
   shown once something's been uploaded) reverts that slot back to the
-  bundled default. Uploaded images are session-only (kept in memory as
+  bundled default. Each cloud row also has a checkbox (`_cloudEnabled`) —
+  unchecked slots are dropped from the painter's sprite mix, so 1/2/3
+  variants can be compared; the last checked box is locked so the painter
+  always has a sprite — and, while enabled, a "Rotate N" slider
+  (`_cloudRotationDeg`, −180..180°) that spins that sprite on top of its
+  tangent-aligned rotation along the spiral
+  (`CloudSpiralPainter.imageRotationsRad`). Both travel in "Share params"
+  as `cloudOn`/`cloudRotate` lists. Uploaded images are session-only (kept in memory as
   `_customLogoBytes`/`_customCloudImages`), never written to `assets/` or
   `pubspec.yaml` — swapping in a new *permanent* default still means adding
   the file and updating `_cloudAssetPaths`/`assets/logo.png` as before.
@@ -164,8 +171,9 @@ tuned live with sliders before porting it.
   rather than floating around it.
 - `assets/cloud_blob_*.webp` — cloud puff sprites. Only 3 are "active" at
   once (see `_cloudAssetPaths` in `splash_screen.dart`); the rest are past
-  sets kept in case of reverting. Multiple images in `_cloudAssetPaths` get
-  randomly (but stably per-particle) mixed along the spiral. As of
+  sets kept in case of reverting. Multiple images in `_cloudAssetPaths` (the
+  enabled ones) strictly alternate in order along the spiral — A, B, A, B…
+  (was a random per-particle mix before 2026-10-03). As of
   2026-09-28 all three active slots point at the same new sprite,
   `assets/cloud_blob_19.webp` (a placeholder — "all three clouds like this
   for now" per the team) rather than three distinct variants.
@@ -200,6 +208,23 @@ lsof -nP -iTCP:8765 -sTCP:LISTEN
 
 If something is, `kill -9 <pid>` it first. See "Lessons learned" for why
 this matters.
+
+## Deploying (GitHub Pages)
+
+Live at https://sayen4ik.github.io/splash_screen/ — served from the
+`gh-pages` branch, which holds only the built web output (no sources).
+To redeploy after committing to `main`:
+
+```bash
+flutter build web --release --base-href /splash_screen/
+git worktree add /tmp/splash_gh_pages gh-pages
+rsync -a --delete --exclude .git --exclude .nojekyll build/web/ /tmp/splash_gh_pages/
+cd /tmp/splash_gh_pages && git add -A && git commit -m "Deploy: <what changed>" && git push origin gh-pages
+cd - && git worktree remove /tmp/splash_gh_pages
+```
+
+The `--base-href /splash_screen/` matters — without it the page loads
+blank on Pages, since assets are requested from the domain root.
 
 ## Current tuned baseline (last updated 2026-09-28)
 
@@ -348,5 +373,5 @@ continue the same curve instead of leaving a visible seam.
 **New cloud sprites:** drop PNG/WebP (transparent background) files in
 `assets/`, add them to `pubspec.yaml`'s `assets:` list, and list up to a
 few of them in `_cloudAssetPaths` in `splash_screen.dart`. More than one
-path there makes particles randomly (but stably per-particle) mix between
-variants.
+path there makes consecutive puffs alternate between
+variants in order.

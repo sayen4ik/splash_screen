@@ -22,6 +22,7 @@ import 'cloud_spiral_config.dart';
 class CloudSpiralPainter extends CustomPainter {
   CloudSpiralPainter({
     required this.images,
+    this.imageRotationsRad,
     required this.config,
     required this.timeSeconds,
     this.sizeMultiplier = 1.0,
@@ -40,12 +41,18 @@ class CloudSpiralPainter extends CustomPainter {
   }) : assert(images.isNotEmpty, 'CloudSpiralPainter needs at least one image'),
        particleCount = particleCount ?? config.particleCount;
 
-  /// One or more cloud sprite variants. When there's more than one, each
-  /// particle is assigned a variant via a seed derived from its own stable
-  /// index (see `paint`) — not re-rolled every frame — so a given puff
-  /// never flickers between variants as it travels, but different puffs
-  /// along the spiral read as a varied mix instead of one repeated stamp.
+  /// One or more cloud sprite variants. When there's more than one, puffs
+  /// strictly alternate between them in order along the spiral (A, B, A, B…
+  /// or A, B, C, A, B, C…) — assigned from each puff's own stable index
+  /// (see `paint`), not re-rolled every frame, so a given puff never
+  /// flickers between variants as it travels.
   final List<ui.Image> images;
+
+  /// Optional extra spin (radians) per entry in [images], applied on top of
+  /// each puff's tangent-aligned rotation — lets a sprite whose artwork
+  /// "points" the wrong way be turned to sit right along the spiral. Same
+  /// length as [images] when given; `null` means no extra spin for any.
+  final List<double>? imageRotationsRad;
   final CloudSpiralConfig config;
 
   /// Continuously increasing elapsed time (seconds); does not need to be
@@ -182,14 +189,19 @@ class CloudSpiralPainter extends CustomPainter {
     // silently rotates through the spiral over time. Spacing < 1 packs
     // puffs closer by drawing more of them at the same even 1/N step;
     // spacing > 1 spreads them out by drawing fewer.
-    final effectiveCount = (particleCount / particleSpacing).round().clamp(
-      4,
-      400,
-    );
-    // Each slot's image variant is picked from a seed on its own stable
-    // index `i` (not re-rolled with the ambient time), so a given puff
-    // keeps the same sprite for its whole trip out from the tip, while
-    // different puffs along the spiral still read as a varied mix.
+    //
+    // Rounded up to a multiple of `images.length` so the A/B/C alternation
+    // below also holds across the loop's wrap-around seam (last puff → first
+    // puff) — otherwise an odd count with 2 sprites puts two identical
+    // clouds next to each other once per loop.
+    final rawCount = (particleCount / particleSpacing).round().clamp(4, 400);
+    final effectiveCount =
+        (rawCount / images.length).ceil() * images.length;
+    // Each slot's image variant comes from its own stable index `i` (not
+    // re-rolled with the ambient time), so a given puff keeps the same
+    // sprite for its whole trip out from the tip. Neighbouring `i`s are
+    // neighbouring puffs along the spiral, so `i % n` makes the variants
+    // strictly alternate.
     final particles = List.generate(effectiveCount, (i) {
       // `pRaw` is the strictly-linear-in-time stagger clock — it's what
       // guarantees the even, full-coverage tiling described above and
@@ -207,9 +219,7 @@ class CloudSpiralPainter extends CustomPainter {
       final pRaw =
           ((timeSeconds / config.loopSeconds) + i / effectiveCount) % 1.0;
       final p = math.pow(pRaw, depthSpeedPower).toDouble();
-      final imageIndex = images.length == 1
-          ? 0
-          : (math.Random(i).nextInt(images.length));
+      final imageIndex = i % images.length;
       return (p: p, imageIndex: imageIndex);
     })..sort((a, b) => a.p.compareTo(b.p));
 
@@ -278,7 +288,9 @@ class CloudSpiralPainter extends CustomPainter {
         center.dx + r * math.cos(angle),
         center.dy + r * math.sin(angle),
       );
-      canvas.rotate(angle + math.pi / 2);
+      canvas.rotate(
+        angle + math.pi / 2 + (imageRotationsRad?[particle.imageIndex] ?? 0),
+      );
       // saveLayer + a translucent black paint is the reliable way to fade an
       // image's own alpha further: Paint.color/blendMode on drawImageRect
       // blend the image against whatever is already on the canvas, not
